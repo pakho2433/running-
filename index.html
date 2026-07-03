@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#173f5f" />
+  <meta name="theme-color" content="#596dff" />
   <meta name="description" content="以閱讀推動班際跑步進度的 3D 校園閱讀平台" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
@@ -13,6 +13,8 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="./styles.css?v=20260703-stage-fix-1" />
   <link rel="stylesheet" href="./stage-fix.css?v=20260703-stage-fix-1" />
+  <link rel="stylesheet" href="./colorful-theme.css?v=20260703-colour-map-1" />
+  <link rel="stylesheet" href="./map-controls.css?v=20260703-colour-map-1" />
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -20,7 +22,7 @@
       <div class="brand-mark" aria-hidden="true">🏃📚</div>
       <p class="eyebrow">READING RUN</p>
       <h1 id="loginTitle">登入閱讀跑道</h1>
-      <p class="login-intro">輸入課室及學生 ID。使用同一組資料，可在手機、平板或電腦接續進度。</p>
+      <p class="login-intro">輸入課室及學生 ID。為保障學生資料，每次開啟或重新整理網頁均須重新登入。</p>
 
       <form id="loginForm" class="login-form">
         <label>
@@ -29,7 +31,7 @@
         </label>
         <label>
           <span>學生 ID</span>
-          <input id="studentId" type="text" inputmode="text" maxlength="20" autocomplete="username" placeholder="例如：S0123" required />
+          <input id="studentId" type="text" inputmode="text" maxlength="20" autocomplete="off" placeholder="例如：S0123" required />
         </label>
         <button id="loginButton" class="primary-button" type="submit">進入跑道</button>
       </form>
@@ -183,7 +185,14 @@
           </div>
 
           <div class="track-shell">
+            <div class="map-control-bar" aria-label="地圖視角控制">
+              <button id="mapExpandButton" class="map-control-button" type="button" aria-pressed="false">⛶ 放大地圖</button>
+              <button id="firstPersonButton" class="map-control-button" type="button" aria-pressed="false">👁 第一身</button>
+              <button id="orbitViewButton" class="map-control-button" type="button" aria-pressed="false">↻ 360° 自由觀看</button>
+              <button id="resetViewButton" class="map-control-button" type="button">⌂ 重設視角</button>
+            </div>
             <div id="trackCanvas" class="track-canvas" aria-label="3D 學生跑道"></div>
+            <p id="mapViewHint" class="map-view-hint">按「第一身」跟隨自己；按「360°」後拖曳旋轉，滾輪或雙指縮放。</p>
             <div id="trackEmpty" class="track-empty">這個位置暫時未有學生。</div>
           </div>
 
@@ -207,14 +216,17 @@
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
   <script src="./reset-all-v1.js?v=20260703-full-reset-1"></script>
+  <script src="./require-login.js?v=20260703-colour-map-1"></script>
   <script type="importmap">
     {
       "imports": {
+        "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js": "./three-reading-wrapper.js?v=20260703-colour-map-1",
         "./app-config.js": "./app-config.js?v=20260703-score-map-fix-2",
         "./firebase-config.js": "./firebase-config-v3.js"
       }
     }
   </script>
-  <script type="module" src="./app-stage.js?v=20260703-score-map-fix-2"></script>
+  <script type="module" src="./map-controls.js?v=20260703-colour-map-1"></script>
+  <script type="module" src="./app-stage.js?v=20260703-colour-map-1"></script>
 </body>
 </html>
