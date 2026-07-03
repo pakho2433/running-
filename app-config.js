@@ -8,7 +8,7 @@ const CLASSROOM_NAMES = [
 ];
 
 export const APP_CONFIG = {
-  schoolName: "全校閱讀跑道",
+  schoolName: "東華三院周演森小學-26/27悅讀千里號",
   maxRunnersPerClass: 26,
   trackDistance: 15000,
   stageDistance: 1500,
