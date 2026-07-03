@@ -14,6 +14,8 @@ const COUNTRY_SCENES = [
 const locationButtons = document.querySelector("#locationButtons");
 const currentLocationLabel = document.querySelector("#currentLocationLabel");
 
+loadDeviceLayout();
+
 if (locationButtons) {
   new MutationObserver(decorateLocationCards).observe(locationButtons, { childList: true });
   decorateLocationCards();
@@ -106,4 +108,37 @@ function makeSceneImage(scene, index) {
   </svg>`;
 
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function loadDeviceLayout() {
+  if (!document.querySelector('link[data-device-layout="true"]')) {
+    const stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = "./device-layout.css?v=20260703-device-layout-1";
+    stylesheet.dataset.deviceLayout = "true";
+    document.head.append(stylesheet);
+  }
+
+  if (!document.querySelector('script[data-device-layout="true"]')) {
+    const script = document.createElement("script");
+    script.src = "./device-layout.js?v=20260703-device-layout-1";
+    script.dataset.deviceLayout = "true";
+    document.head.append(script);
+  }
+}
+
+loadLandmarkAssets();
+
+function loadLandmarkAssets() {
+  if (!document.querySelector('link[data-country-landmarks="true"]')) {
+    const stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = "./country-landmarks-3d.css?v=20260703-landmarks-1";
+    stylesheet.dataset.countryLandmarks = "true";
+    document.head.append(stylesheet);
+  }
+
+  import("./country-landmarks-3d.js?v=20260703-landmarks-1").catch((error) => {
+    console.error("Unable to load country landmark models", error);
+  });
 }
