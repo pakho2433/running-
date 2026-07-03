@@ -11,7 +11,7 @@
   <title>閱讀跑道 Reading Run</title>
   <link rel="preconnect" href="https://www.gstatic.com" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-  <link rel="stylesheet" href="./styles.css?v=20260703-25000" />
+  <link rel="stylesheet" href="./styles.css?v=20260703-stage-fix-1" />
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -165,9 +165,25 @@
             </div>
           </div>
 
+          <section class="location-panel" aria-labelledby="locationPanelTitle">
+            <div class="location-panel-heading">
+              <div>
+                <p class="eyebrow">4 LOCATIONS</p>
+                <h3 id="locationPanelTitle">分段觀看學生跑步</h3>
+              </div>
+              <span id="currentLocationLabel">地方 1 · 0–400 里</span>
+            </div>
+            <div id="locationButtons" class="location-buttons"></div>
+          </section>
+
+          <div class="track-range-bar">
+            <span>正在觀看</span>
+            <strong id="trackRange">0–400 里</strong>
+          </div>
+
           <div class="track-shell">
             <div id="trackCanvas" class="track-canvas" aria-label="3D 學生跑道"></div>
-            <div id="trackEmpty" class="track-empty">這個課室尚未有學生登入。</div>
+            <div id="trackEmpty" class="track-empty">這個位置暫時未有學生。</div>
           </div>
 
           <section class="leaderboard-section" aria-labelledby="leaderboardTitle">
@@ -193,10 +209,11 @@
   <script type="importmap">
     {
       "imports": {
+        "./app-config.js": "./app-config.js?v=20260703-stage-fix-1",
         "./firebase-config.js": "./firebase-config-v3.js"
       }
     }
   </script>
-  <script type="module" src="./app.js?v=20260703-25000"></script>
+  <script type="module" src="./app.js?v=20260703-stage-fix-1"></script>
 </body>
 </html>
