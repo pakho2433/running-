@@ -1,0 +1,105 @@
+.track-shell {
+  position: relative;
+}
+
+.map-control-bar {
+  position: absolute;
+  z-index: 12;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: calc(100% - 28px);
+}
+
+.map-control-button {
+  min-height: 38px;
+  border: 1px solid rgba(255,255,255,.82);
+  border-radius: 999px;
+  padding: 0 13px;
+  color: #173f5f;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 8px 22px rgba(24, 62, 91, .18);
+  backdrop-filter: blur(12px);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.map-control-button:hover,
+.map-control-button.is-active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #ff6f91, #596dff 55%, #1dbf92);
+}
+
+.map-view-hint {
+  position: absolute;
+  z-index: 11;
+  left: 14px;
+  bottom: 14px;
+  max-width: min(420px, calc(100% - 28px));
+  margin: 0;
+  border-radius: 14px;
+  padding: 9px 12px;
+  color: #173f5f;
+  background: rgba(255,255,255,.86);
+  box-shadow: 0 8px 22px rgba(24, 62, 91, .14);
+  backdrop-filter: blur(10px);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.track-shell.is-map-expanded {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100dvh;
+  border-radius: 0;
+  background: #ccecff;
+}
+
+.track-shell.is-map-expanded .track-canvas,
+.track-shell.is-map-expanded .track-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+body.map-expanded {
+  overflow: hidden;
+}
+
+.track-canvas.is-interactive canvas {
+  cursor: grab;
+  touch-action: none;
+}
+
+.track-canvas.is-interactive.is-dragging canvas {
+  cursor: grabbing;
+}
+
+@media (max-width: 620px) {
+  .map-control-bar {
+    top: 10px;
+    right: 10px;
+    gap: 6px;
+    max-width: calc(100% - 20px);
+  }
+
+  .map-control-button {
+    min-height: 36px;
+    padding-inline: 10px;
+    font-size: 11px;
+  }
+
+  .map-view-hint {
+    left: 10px;
+    bottom: 10px;
+    max-width: calc(100% - 20px);
+  }
+}
