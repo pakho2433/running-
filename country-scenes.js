@@ -16,6 +16,7 @@ const currentLocationLabel = document.querySelector("#currentLocationLabel");
 
 loadDeviceLayout();
 loadDailyLimitAssets();
+loadTeacherCenterAssets();
 
 if (locationButtons) {
   new MutationObserver(decorateLocationCards).observe(locationButtons, { childList: true });
@@ -139,6 +140,20 @@ function loadDailyLimitAssets() {
 
   import("./daily-limit-v3.js?v=20260704-daily-limit-3").catch((error) => {
     console.error("Unable to load daily submission limit", error);
+  });
+}
+
+function loadTeacherCenterAssets() {
+  if (!document.querySelector('link[data-teacher-center="true"]')) {
+    const stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = "./teacher-center.css?v=20260704-teacher-center-1";
+    stylesheet.dataset.teacherCenter = "true";
+    document.head.append(stylesheet);
+  }
+
+  import("./teacher-center.js?v=20260704-teacher-center-1").catch((error) => {
+    console.error("Unable to load teacher data center", error);
   });
 }
 
