@@ -1,0 +1,413 @@
+html[data-input="touch"] button,
+html[data-input="touch"] input,
+html[data-input="touch"] select {
+  min-height: 48px;
+}
+
+html[data-input="touch"] button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[data-input="touch"] .track-canvas canvas {
+  touch-action: pan-y;
+}
+
+html[data-input="touch"] .track-canvas.is-interactive canvas {
+  touch-action: none;
+}
+
+/* iPad / tablet */
+html[data-device="tablet"] body {
+  min-height: var(--app-height, 100dvh);
+  padding-bottom: var(--safe-bottom, 0px);
+}
+
+html[data-device="tablet"] .topbar {
+  padding-top: calc(14px + var(--safe-top, 0px));
+  padding-right: calc(22px + var(--safe-right, 0px));
+  padding-left: calc(22px + var(--safe-left, 0px));
+}
+
+html[data-device="tablet"] .main-layout {
+  width: 100%;
+  padding-right: calc(20px + var(--safe-right, 0px));
+  padding-left: calc(20px + var(--safe-left, 0px));
+}
+
+html[data-device="tablet"][data-orientation="portrait"] .main-layout {
+  grid-template-columns: 1fr;
+}
+
+html[data-device="tablet"][data-orientation="portrait"] .sidebar {
+  position: static;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+html[data-device="tablet"][data-orientation="portrait"] .student-panel,
+html[data-device="tablet"][data-orientation="portrait"] .book-form,
+html[data-device="tablet"][data-orientation="portrait"] .book-mascot-panel {
+  grid-column: 1 / -1;
+}
+
+html[data-device="tablet"][data-orientation="landscape"] .main-layout {
+  grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+  gap: 20px;
+}
+
+html[data-device="tablet"][data-orientation="landscape"] .sidebar {
+  top: 92px;
+}
+
+html[data-device="tablet"] .location-buttons {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+html[data-device="tablet"][data-orientation="portrait"] .location-buttons {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+html[data-device="tablet"] .country-location-card {
+  min-height: 220px !important;
+}
+
+html[data-device="tablet"] .track-shell {
+  min-height: min(62dvh, 700px);
+}
+
+html[data-device="tablet"][data-orientation="landscape"] .track-shell {
+  min-height: min(68dvh, 720px);
+}
+
+html[data-device="tablet"] .map-control-button {
+  min-height: 46px;
+  padding-inline: 15px;
+  font-size: 12px;
+}
+
+html[data-device="tablet"] .history-dialog {
+  width: min(760px, calc(100vw - 40px));
+  max-height: min(88dvh, 920px);
+}
+
+/* Phone */
+html[data-device="phone"] body {
+  min-height: var(--app-height, 100dvh);
+  padding-bottom: var(--safe-bottom, 0px);
+  background-attachment: scroll;
+}
+
+html[data-device="phone"] .topbar {
+  position: sticky;
+  top: 0;
+  align-items: center;
+  gap: 8px;
+  padding-top: calc(10px + var(--safe-top, 0px));
+  padding-right: calc(12px + var(--safe-right, 0px));
+  padding-bottom: 10px;
+  padding-left: calc(12px + var(--safe-left, 0px));
+}
+
+html[data-device="phone"] .topbar .eyebrow {
+  margin-bottom: 2px;
+  font-size: 9px;
+}
+
+html[data-device="phone"] .topbar h1 {
+  font-size: 19px;
+  line-height: 1.15;
+}
+
+html[data-device="phone"] .topbar-actions {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+html[data-device="phone"] .sync-status {
+  max-width: 82px;
+  overflow: hidden;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-device="phone"] .ghost-button {
+  min-height: 40px;
+  padding-inline: 12px;
+  font-size: 12px;
+}
+
+html[data-device="phone"] .main-layout {
+  display: block;
+  width: 100%;
+  padding: 12px calc(10px + var(--safe-right, 0px)) calc(32px + var(--safe-bottom, 0px)) calc(10px + var(--safe-left, 0px));
+}
+
+html[data-device="phone"] .sidebar,
+html[data-device="phone"] .content-area {
+  display: grid;
+  gap: 12px;
+}
+
+html[data-device="phone"] .sidebar {
+  position: static;
+  grid-template-columns: 1fr;
+  margin-bottom: 12px;
+}
+
+html[data-device="phone"] .student-panel,
+html[data-device="phone"] .book-form,
+html[data-device="phone"] .my-progress-card,
+html[data-device="phone"] .recent-book-card,
+html[data-device="phone"] .book-mascot-panel,
+html[data-device="phone"] .overview-section,
+html[data-device="phone"] .track-section {
+  border-radius: 18px;
+}
+
+html[data-device="phone"] .book-form,
+html[data-device="phone"] .overview-section,
+html[data-device="phone"] .track-section {
+  padding: 15px;
+}
+
+html[data-device="phone"] .book-form-heading {
+  align-items: flex-start;
+}
+
+html[data-device="phone"] .book-form-heading > label {
+  font-size: 17px;
+}
+
+html[data-device="phone"] input,
+html[data-device="phone"] select {
+  min-height: 54px;
+  border-radius: 13px;
+  font-size: 16px;
+}
+
+html[data-device="phone"] .submit-reading-button {
+  min-height: 54px;
+  font-size: 16px;
+}
+
+html[data-device="phone"] .my-progress-card strong {
+  font-size: 25px;
+}
+
+html[data-device="phone"] .book-mascot-panel {
+  min-height: 238px;
+}
+
+html[data-device="phone"] .book-mascot-stage {
+  transform: scale(.78);
+}
+
+html[data-device="phone"] .section-heading,
+html[data-device="phone"] .track-heading {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+html[data-device="phone"] .section-heading h2 {
+  font-size: 23px;
+}
+
+html[data-device="phone"] .section-heading > p {
+  font-size: 12px;
+  text-align: left;
+}
+
+html[data-device="phone"] .track-stats {
+  justify-content: flex-start;
+}
+
+html[data-device="phone"] .classroom-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 10px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+html[data-device="phone"] .classroom-card {
+  flex: 0 0 min(72vw, 250px);
+  min-height: 112px;
+  scroll-snap-align: start;
+}
+
+html[data-device="phone"] .location-panel {
+  padding: 13px;
+}
+
+html[data-device="phone"] .location-panel-heading {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+}
+
+html[data-device="phone"] .location-buttons {
+  display: flex !important;
+  grid-template-columns: none !important;
+  gap: 11px;
+  overflow-x: auto;
+  padding: 3px 2px 12px;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+html[data-device="phone"] .country-location-card {
+  flex: 0 0 min(79vw, 285px);
+  min-height: 220px !important;
+  scroll-snap-align: center;
+}
+
+html[data-device="phone"] .track-range-bar {
+  margin-bottom: 8px;
+  padding: 9px 11px;
+}
+
+html[data-device="phone"] .track-shell {
+  min-height: clamp(420px, 58dvh, 620px);
+  border-radius: 18px;
+}
+
+html[data-device="phone"][data-orientation="landscape"] .track-shell {
+  min-height: calc(var(--app-height, 100dvh) - 24px);
+}
+
+html[data-device="phone"] .map-control-bar {
+  left: 8px;
+  right: 8px;
+  top: 8px;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  max-width: none;
+  overflow-x: auto;
+  padding-bottom: 5px;
+  scrollbar-width: none;
+}
+
+html[data-device="phone"] .map-control-bar::-webkit-scrollbar {
+  display: none;
+}
+
+html[data-device="phone"] .map-control-button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding-inline: 11px;
+  font-size: 11px;
+}
+
+html[data-device="phone"] .map-view-hint {
+  right: 10px;
+  left: 10px;
+  bottom: 10px;
+  max-width: none;
+  padding: 8px 10px;
+  font-size: 10px;
+}
+
+html[data-device="phone"] .track-shell::after {
+  display: none;
+}
+
+html[data-device="phone"] .track-empty:not(.is-hidden) {
+  bottom: 66px;
+  max-width: calc(100% - 24px);
+  font-size: 10px;
+}
+
+html[data-device="phone"] .leaderboard-section {
+  padding: 14px;
+}
+
+html[data-device="phone"] .leaderboard-heading {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+html[data-device="phone"] .leaderboard-item {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  padding: 8px;
+}
+
+html[data-device="phone"] .runner-list {
+  grid-template-columns: 1fr;
+}
+
+html[data-device="phone"] .history-modal {
+  align-items: stretch;
+  padding: 0;
+}
+
+html[data-device="phone"] .history-dialog {
+  width: 100%;
+  height: var(--app-height, 100dvh);
+  max-height: none;
+  border-radius: 0;
+}
+
+html[data-device="phone"] .history-dialog-header {
+  padding-top: calc(16px + var(--safe-top, 0px));
+}
+
+html[data-device="phone"] .history-list {
+  max-height: calc(var(--app-height, 100dvh) - 180px - var(--safe-top, 0px) - var(--safe-bottom, 0px));
+  padding-bottom: calc(24px + var(--safe-bottom, 0px));
+}
+
+html[data-device="phone"] .toast-region {
+  right: calc(10px + var(--safe-right, 0px));
+  bottom: calc(10px + var(--safe-bottom, 0px));
+  width: calc(100% - 20px - var(--safe-left, 0px) - var(--safe-right, 0px));
+}
+
+html[data-device="phone"] .track-shell.is-map-expanded {
+  width: 100vw;
+  height: var(--app-height, 100dvh);
+  min-height: var(--app-height, 100dvh);
+  padding-top: var(--safe-top, 0px);
+  padding-right: var(--safe-right, 0px);
+  padding-bottom: var(--safe-bottom, 0px);
+  padding-left: var(--safe-left, 0px);
+}
+
+html[data-device="phone"] .track-shell.is-map-expanded .map-exit-button {
+  top: calc(10px + var(--safe-top, 0px));
+  left: calc(10px + var(--safe-left, 0px));
+}
+
+html[data-device="phone"] .track-shell.is-map-expanded .map-control-bar {
+  top: calc(64px + var(--safe-top, 0px));
+  right: calc(8px + var(--safe-right, 0px));
+  left: calc(8px + var(--safe-left, 0px));
+}
+
+/* Avoid iOS input zoom and improve landscape usability */
+html[data-device="phone"] input,
+html[data-device="phone"] select,
+html[data-device="tablet"] input,
+html[data-device="tablet"] select {
+  font-size: max(16px, 1em);
+}
+
+html[data-device="phone"][data-orientation="landscape"] .topbar {
+  position: relative;
+}
+
+html[data-device="phone"][data-orientation="landscape"] .book-mascot-panel {
+  min-height: 210px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-device="phone"] .classroom-grid,
+  html[data-device="phone"] .location-buttons {
+    scroll-behavior: auto;
+  }
+}
