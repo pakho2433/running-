@@ -13,7 +13,13 @@ service cloud.firestore {
         && request.resource.data.booksCount is int
         && request.resource.data.booksCount >= 0
         && request.resource.data.distance is number
-        && request.resource.data.distance >= 0;
+        && request.resource.data.distance >= 0
+        && (!('dailyBooksCount' in request.resource.data)
+          || (request.resource.data.dailyBooksCount is int
+            && request.resource.data.dailyBooksCount >= 0
+            && request.resource.data.dailyBooksCount <= 5))
+        && (!('dailyDateKey' in request.resource.data)
+          || request.resource.data.dailyDateKey is string);
     }
 
     match /students/{studentKey} {
