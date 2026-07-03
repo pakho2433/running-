@@ -15,6 +15,7 @@ const locationButtons = document.querySelector("#locationButtons");
 const currentLocationLabel = document.querySelector("#currentLocationLabel");
 
 loadDeviceLayout();
+loadDailyLimitAssets();
 
 if (locationButtons) {
   new MutationObserver(decorateLocationCards).observe(locationButtons, { childList: true });
@@ -125,6 +126,20 @@ function loadDeviceLayout() {
     script.dataset.deviceLayout = "true";
     document.head.append(script);
   }
+}
+
+function loadDailyLimitAssets() {
+  if (!document.querySelector('link[data-daily-limit="true"]')) {
+    const stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = "./daily-limit.css?v=20260704-daily-limit-1";
+    stylesheet.dataset.dailyLimit = "true";
+    document.head.append(stylesheet);
+  }
+
+  import("./daily-limit.js?v=20260704-daily-limit-1").catch((error) => {
+    console.error("Unable to load daily submission limit", error);
+  });
 }
 
 loadLandmarkAssets();
