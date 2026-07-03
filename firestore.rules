@@ -13,18 +13,13 @@ service cloud.firestore {
         && request.resource.data.booksCount is int
         && request.resource.data.booksCount >= 0
         && request.resource.data.distance is number
-        && request.resource.data.distance >= 0;
-    }
-
-    function validDailyUsage() {
-      return request.resource.data.studentKey is string
-        && request.resource.data.classId is string
-        && request.resource.data.studentId is string
-        && request.resource.data.dateKey is string
-        && request.resource.data.count is int
-        && request.resource.data.count >= 1
-        && request.resource.data.count <= 5
-        && request.resource.data.limit == 5;
+        && request.resource.data.distance >= 0
+        && (!("dailyBooksCount" in request.resource.data)
+          || (request.resource.data.dailyBooksCount is int
+            && request.resource.data.dailyBooksCount >= 0
+            && request.resource.data.dailyBooksCount <= 5))
+        && (!("dailyDateKey" in request.resource.data)
+          || request.resource.data.dailyDateKey is string);
     }
 
     match /students/{studentKey} {
@@ -36,22 +31,6 @@ service cloud.firestore {
     match /bookLogs/{logId} {
       allow read, create: if signedIn();
       allow update, delete: if false;
-    }
-
-    match /dailyUsage/{usageId} {
-      allow read: if signedIn();
-      allow create: if signedIn()
-        && validDailyUsage()
-        && request.resource.data.count == 1;
-      allow update: if signedIn()
-        && validDailyUsage()
-        && request.resource.data.studentKey == resource.data.studentKey
-        && request.resource.data.classId == resource.data.classId
-        && request.resource.data.studentId == resource.data.studentId
-        && request.resource.data.dateKey == resource.data.dateKey
-        && request.resource.data.limit == resource.data.limit
-        && request.resource.data.count == resource.data.count + 1;
-      allow delete: if false;
     }
   }
 }
