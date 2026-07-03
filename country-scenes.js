@@ -132,12 +132,12 @@ function loadDailyLimitAssets() {
   if (!document.querySelector('link[data-daily-limit="true"]')) {
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = "./daily-limit.css?v=20260704-daily-limit-2";
+    stylesheet.href = "./daily-limit.css?v=20260704-daily-limit-3";
     stylesheet.dataset.dailyLimit = "true";
     document.head.append(stylesheet);
   }
 
-  import("./daily-limit-v2.js?v=20260704-daily-limit-2").catch((error) => {
+  import("./daily-limit-v3.js?v=20260704-daily-limit-3").catch((error) => {
     console.error("Unable to load daily submission limit", error);
   });
 }
