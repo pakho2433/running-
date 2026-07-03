@@ -14,7 +14,8 @@
   <link rel="stylesheet" href="./styles.css?v=20260703-stage-fix-1" />
   <link rel="stylesheet" href="./stage-fix.css?v=20260703-stage-fix-1" />
   <link rel="stylesheet" href="./colorful-theme.css?v=20260703-colour-map-1" />
-  <link rel="stylesheet" href="./map-controls.css?v=20260703-colour-map-1" />
+  <link rel="stylesheet" href="./map-controls.css?v=20260703-book-exit-1" />
+  <link rel="stylesheet" href="./book-mascot.css?v=20260703-book-exit-1" />
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -142,6 +143,33 @@
           <span>最近一本</span>
           <strong id="myLastBook">尚未提交</strong>
         </section>
+
+        <section class="book-mascot-panel" aria-label="會動的可愛卡通書">
+          <p class="book-mascot-caption">READING BUDDY</p>
+          <div class="book-mascot-stage" aria-hidden="true">
+            <span class="book-sparkle one"></span>
+            <span class="book-sparkle two"></span>
+            <span class="book-sparkle three"></span>
+            <span class="book-shadow"></span>
+            <div class="book-character">
+              <span class="book-pages"></span>
+              <span class="book-page-flap"></span>
+              <span class="book-arm left"></span>
+              <span class="book-arm right"></span>
+              <span class="book-leg left"></span>
+              <span class="book-leg right"></span>
+              <span class="book-cover"></span>
+              <span class="book-face">
+                <span class="book-eye left"></span>
+                <span class="book-eye right"></span>
+                <span class="book-cheek left"></span>
+                <span class="book-cheek right"></span>
+                <span class="book-mouth"></span>
+              </span>
+            </div>
+          </div>
+          <span class="book-mascot-bubble">多讀一本，再跑遠一點！</span>
+        </section>
       </aside>
 
       <section class="content-area">
@@ -185,6 +213,7 @@
           </div>
 
           <div class="track-shell">
+            <button id="mapExitButton" class="map-exit-button" type="button" aria-hidden="true">✕ 退出全屏</button>
             <div class="map-control-bar" aria-label="地圖視角控制">
               <button id="mapExpandButton" class="map-control-button" type="button" aria-pressed="false">⛶ 放大地圖</button>
               <button id="firstPersonButton" class="map-control-button" type="button" aria-pressed="false">👁 第一身</button>
@@ -226,7 +255,7 @@
       }
     }
   </script>
-  <script type="module" src="./map-controls.js?v=20260703-colour-map-1"></script>
+  <script type="module" src="./map-controls.js?v=20260703-book-exit-1"></script>
   <script type="module" src="./app-stage.js?v=20260703-colour-map-1"></script>
 </body>
 </html>
