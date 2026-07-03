@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="./colorful-theme.css?v=20260703-colour-map-1" />
   <link rel="stylesheet" href="./map-controls.css?v=20260703-book-exit-1" />
   <link rel="stylesheet" href="./book-mascot.css?v=20260703-book-exit-1" />
+  <link rel="stylesheet" href="./country-history.css?v=20260703-country-history-1" />
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -144,8 +145,11 @@
           <strong id="myLastBook">尚未提交</strong>
         </section>
 
-        <section class="book-mascot-panel" aria-label="會動的可愛卡通書">
-          <p class="book-mascot-caption">READING BUDDY</p>
+        <section class="book-mascot-panel" aria-label="Reading Buddy 閱讀歷史">
+          <button id="readingBuddyButton" class="reading-buddy-button" type="button" aria-haspopup="dialog" aria-controls="readingHistoryModal">
+            <span>📚 READING BUDDY</span>
+            <small>查看閱讀歷史</small>
+          </button>
           <div class="book-mascot-stage" aria-hidden="true">
             <span class="book-sparkle one"></span>
             <span class="book-sparkle two"></span>
@@ -168,7 +172,7 @@
               </span>
             </div>
           </div>
-          <span class="book-mascot-bubble">多讀一本，再跑遠一點！</span>
+          <span class="book-mascot-bubble">按我查看以往讀過的書！</span>
         </section>
       </aside>
 
@@ -199,8 +203,8 @@
           <section class="location-panel" aria-labelledby="locationPanelTitle">
             <div class="location-panel-heading">
               <div>
-                <p class="eyebrow">10 LOCATIONS</p>
-                <h3 id="locationPanelTitle">分段觀看學生跑步</h3>
+                <p class="eyebrow">10 COUNTRIES</p>
+                <h3 id="locationPanelTitle">環遊世界閱讀跑道</h3>
               </div>
               <span id="currentLocationLabel">地方 1 · 0–1,500 里</span>
             </div>
@@ -242,6 +246,24 @@
     </main>
   </div>
 
+  <div id="readingHistoryModal" class="history-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="readingHistoryTitle">
+    <section class="history-dialog">
+      <header class="history-dialog-header">
+        <div>
+          <p class="eyebrow">READING BUDDY</p>
+          <h2 id="readingHistoryTitle">我的閱讀歷史</h2>
+          <p>查看曾經閱讀的書本、作者及獲得里數。</p>
+        </div>
+        <button id="readingHistoryClose" class="history-close-button" type="button" aria-label="關閉閱讀歷史">✕</button>
+      </header>
+      <div class="history-summary-bar">
+        <strong id="readingHistorySummary"></strong>
+        <span id="readingHistoryStatus" role="status">按 Reading Buddy 載入紀錄。</span>
+      </div>
+      <div id="readingHistoryList" class="history-list"></div>
+    </section>
+  </div>
+
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
   <script src="./reset-all-v1.js?v=20260703-full-reset-1"></script>
@@ -257,5 +279,7 @@
   </script>
   <script type="module" src="./map-controls.js?v=20260703-book-exit-1"></script>
   <script type="module" src="./app-stage.js?v=20260703-colour-map-1"></script>
+  <script type="module" src="./country-scenes.js?v=20260703-country-history-1"></script>
+  <script type="module" src="./reading-history.js?v=20260703-country-history-1"></script>
 </body>
 </html>
