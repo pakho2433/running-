@@ -107,3 +107,19 @@ function makeSceneImage(scene, index) {
 
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
+
+loadLandmarkAssets();
+
+function loadLandmarkAssets() {
+  if (!document.querySelector('link[data-country-landmarks="true"]')) {
+    const stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = "./country-landmarks-3d.css?v=20260703-landmarks-1";
+    stylesheet.dataset.countryLandmarks = "true";
+    document.head.append(stylesheet);
+  }
+
+  import("./country-landmarks-3d.js?v=20260703-landmarks-1").catch((error) => {
+    console.error("Unable to load country landmark models", error);
+  });
+}
