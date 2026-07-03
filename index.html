@@ -108,8 +108,8 @@
               <span>回應六：是否閱讀完成？</span>
               <select id="readingCompleted">
                 <option value="">未選擇（不加里數）</option>
-                <option value="yes">是</option>
-                <option value="no">否</option>
+                <option value="yes">是（加 50 里）</option>
+                <option value="">否（不加里數）</option>
               </select>
             </label>
           </div>
@@ -119,7 +119,7 @@
             <strong id="scorePreview">0</strong>
             <small>里</small>
           </div>
-          <p>書名＋作者＝10 里；讀物類別＋30；科目＋30；完成狀態＋50。</p>
+          <p>書名＋作者＝10 里；讀物類別＋30；科目＋30；只有選「是」才加 50 里，選「否」不加。</p>
           <button class="primary-button submit-reading-button" type="submit">提交閱讀紀錄</button>
         </form>
 
@@ -149,7 +149,7 @@
               <p class="eyebrow">17 CLASSROOMS</p>
               <h2 id="overviewTitle">全校課室狀況</h2>
             </div>
-            <p>按課室可查看最多 26 名學生在 25,000 里跑道上的即時位置。</p>
+            <p>按課室可查看最多 26 名學生在 15,000 里跑道上的即時位置。</p>
           </div>
           <div id="classroomGrid" class="classroom-grid"></div>
         </section>
@@ -157,7 +157,7 @@
         <section class="track-section" aria-labelledby="trackTitle">
           <div class="section-heading track-heading">
             <div>
-              <p class="eyebrow">LIVE 3D TRACK · 25,000 里</p>
+              <p class="eyebrow">LIVE 3D TRACK · 15,000 里</p>
               <h2 id="trackTitle">課室跑道</h2>
             </div>
             <div class="track-stats">
@@ -169,17 +169,17 @@
           <section class="location-panel" aria-labelledby="locationPanelTitle">
             <div class="location-panel-heading">
               <div>
-                <p class="eyebrow">4 LOCATIONS</p>
+                <p class="eyebrow">10 LOCATIONS</p>
                 <h3 id="locationPanelTitle">分段觀看學生跑步</h3>
               </div>
-              <span id="currentLocationLabel">地方 1 · 0–400 里</span>
+              <span id="currentLocationLabel">地方 1 · 0–1,500 里</span>
             </div>
             <div id="locationButtons" class="location-buttons"></div>
           </section>
 
           <div class="track-range-bar">
             <span>正在觀看</span>
-            <strong id="trackRange">0–400 里</strong>
+            <strong id="trackRange">0–1,500 里</strong>
           </div>
 
           <div class="track-shell">
@@ -210,11 +210,11 @@
   <script type="importmap">
     {
       "imports": {
-        "./app-config.js": "./app-config.js?v=20260703-stage-fix-1",
+        "./app-config.js": "./app-config.js?v=20260703-score-map-fix-2",
         "./firebase-config.js": "./firebase-config-v3.js"
       }
     }
   </script>
-  <script type="module" src="./app-stage.js?v=20260703-stage-fix-1"></script>
+  <script type="module" src="./app-stage.js?v=20260703-score-map-fix-2"></script>
 </body>
 </html>
