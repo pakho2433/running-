@@ -22,35 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Refresh official Firebase web configuration
-        shell: bash
-        run: |
-          set -euo pipefail
-          CONFIG_URL="https://book-running.web.app/__/firebase/init.json"
-          if curl --fail --silent --show-error --location \
-            --retry 4 --retry-delay 3 \
-            "$CONFIG_URL" \
-            --output firebase-runtime-config.json; then
-            python - <<'PY'
-          import json
-          from pathlib import Path
-
-          path = Path("firebase-runtime-config.json")
-          config = json.loads(path.read_text(encoding="utf-8"))
-          required = ["apiKey", "authDomain", "projectId", "messagingSenderId", "appId"]
-          missing = [key for key in required if not isinstance(config.get(key), str) or not config[key]]
-          if missing:
-              raise SystemExit(f"Firebase config missing required fields: {', '.join(missing)}")
-          if config.get("projectId") != "book-running":
-              raise SystemExit("Firebase config belongs to the wrong project")
-          print("Official Firebase runtime configuration prepared.")
-          PY
-          else
-            echo "Firebase init endpoint unavailable; bundled fallback will be used."
-            rm -f firebase-runtime-config.json
-          fi
-
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
