@@ -21,12 +21,13 @@ const tempDirection = new Vector3();
 const shell = document.querySelector(".track-shell");
 const canvasHost = document.querySelector("#trackCanvas");
 const expandButton = document.querySelector("#mapExpandButton");
+const exitButton = document.querySelector("#mapExitButton");
 const firstPersonButton = document.querySelector("#firstPersonButton");
 const orbitButton = document.querySelector("#orbitViewButton");
 const resetButton = document.querySelector("#resetViewButton");
 const hint = document.querySelector("#mapViewHint");
 
-if (shell && canvasHost && expandButton && firstPersonButton && orbitButton && resetButton) {
+if (shell && canvasHost && expandButton && exitButton && firstPersonButton && orbitButton && resetButton && hint) {
   bindButtons();
   bindPointerControls();
   updateControls();
@@ -35,12 +36,11 @@ if (shell && canvasHost && expandButton && firstPersonButton && orbitButton && r
 
 function bindButtons() {
   expandButton.addEventListener("click", () => {
-    const expanded = !shell.classList.contains("is-map-expanded");
-    shell.classList.toggle("is-map-expanded", expanded);
-    document.body.classList.toggle("map-expanded", expanded);
-    expandButton.textContent = expanded ? "↙ 縮小地圖" : "⛶ 放大地圖";
-    expandButton.setAttribute("aria-pressed", String(expanded));
-    setTimeout(resizeRenderer, 80);
+    setExpanded(!shell.classList.contains("is-map-expanded"));
+  });
+
+  exitButton.addEventListener("click", () => {
+    setExpanded(false);
   });
 
   firstPersonButton.addEventListener("click", () => {
@@ -69,13 +69,19 @@ function bindButtons() {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && shell.classList.contains("is-map-expanded")) {
-      shell.classList.remove("is-map-expanded");
-      document.body.classList.remove("map-expanded");
-      expandButton.textContent = "⛶ 放大地圖";
-      expandButton.setAttribute("aria-pressed", "false");
-      setTimeout(resizeRenderer, 80);
+      setExpanded(false);
     }
   });
+}
+
+function setExpanded(expanded) {
+  shell.classList.toggle("is-map-expanded", expanded);
+  document.body.classList.toggle("map-expanded", expanded);
+  expandButton.textContent = expanded ? "↙ 縮小地圖" : "⛶ 放大地圖";
+  expandButton.setAttribute("aria-pressed", String(expanded));
+  exitButton.setAttribute("aria-hidden", String(!expanded));
+  setTimeout(resizeRenderer, 80);
+  setTimeout(resizeRenderer, 260);
 }
 
 function bindPointerControls() {
