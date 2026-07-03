@@ -1,10 +1,11 @@
-// 在 Firebase Console 建立 Web App 後，把設定貼到這裡。
-// Firebase Web API key 可放在前端；真正的資料保護必須依靠 Firestore Security Rules。
+// Firebase Web App configuration for the Reading Run project.
+// Firebase Web API keys are designed to be used in client apps; access control is enforced by Firestore Security Rules.
 export const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
-  projectId: "PASTE_YOUR_PROJECT_ID",
-  storageBucket: "PASTE_YOUR_PROJECT.firebasestorage.app",
-  messagingSenderId: "PASTE_YOUR_SENDER_ID",
-  appId: "PASTE_YOUR_APP_ID",
+  apiKey: "AIzaSyB2Drw3jtbvMuAtR_4KGN1J63_BU01EC00",
+  authDomain: "book-running.firebaseapp.com",
+  projectId: "book-running",
+  storageBucket: "book-running.firebasestorage.app",
+  messagingSenderId: "290164830206",
+  appId: "1:290164830206:web:49509d69e702593e1c5aaf",
+  measurementId: "G-LY7ZCKGE98",
 };
