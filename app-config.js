@@ -2,6 +2,8 @@ export const APP_CONFIG = {
   schoolName: "全校閱讀跑道",
   maxRunnersPerClass: 26,
   trackDistance: 25000,
+  stageDistance: 400,
+  trackLocations: 4,
   legacyDistancePerBook: 100,
   scoring: {
     base: 10,
