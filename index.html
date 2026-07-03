@@ -11,7 +11,7 @@
   <title>閱讀跑道 Reading Run</title>
   <link rel="preconnect" href="https://www.gstatic.com" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-  <link rel="stylesheet" href="./styles.css?v=20260703-2108" />
+  <link rel="stylesheet" href="./styles.css?v=20260703-25000" />
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -62,12 +62,64 @@
         </section>
 
         <form id="bookForm" class="book-form">
-          <label for="bookTitle">完成閱讀一本書</label>
-          <div class="book-input-row">
-            <input id="bookTitle" type="text" maxlength="80" placeholder="輸入書名" required />
-            <button class="primary-button" type="submit">提交</button>
+          <div class="book-form-heading">
+            <label for="bookTitle">新增閱讀紀錄</label>
+            <span>最高 120 里</span>
           </div>
-          <p>每提交一本書，你便會在 3D 跑道向前移動。</p>
+
+          <div class="book-fields">
+            <label>
+              <span>回應一：日期</span>
+              <input id="readingDate" type="date" />
+            </label>
+            <label>
+              <span>回應二：書本名稱 <em>必填</em></span>
+              <input id="bookTitle" type="text" maxlength="80" placeholder="輸入書本名稱" required />
+            </label>
+            <label>
+              <span>回應三：作者名稱 <em>必填</em></span>
+              <input id="bookAuthor" type="text" maxlength="80" placeholder="輸入作者名稱" required />
+            </label>
+            <label>
+              <span>回應四：屬於哪一種讀物？</span>
+              <select id="readingType">
+                <option value="">未選擇（不加里數）</option>
+                <option value="小說">小說</option>
+                <option value="漫畫">漫畫</option>
+                <option value="新聞">新聞</option>
+                <option value="政府公告">政府公告</option>
+                <option value="政府短片">政府短片</option>
+              </select>
+            </label>
+            <label>
+              <span>回應五：屬於哪一個科目？</span>
+              <select id="bookSubject">
+                <option value="">未選擇（不加里數）</option>
+                <option value="中文">中文</option>
+                <option value="英文">英文</option>
+                <option value="數學">數學</option>
+                <option value="科學">科學</option>
+                <option value="人文">人文</option>
+                <option value="百科">百科</option>
+              </select>
+            </label>
+            <label>
+              <span>回應六：是否閱讀完成？</span>
+              <select id="readingCompleted">
+                <option value="">未選擇（不加里數）</option>
+                <option value="yes">是</option>
+                <option value="no">否</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="score-preview" aria-live="polite">
+            <span>本次可獲</span>
+            <strong id="scorePreview">0</strong>
+            <small>里</small>
+          </div>
+          <p>書名＋作者＝10 里；讀物類別＋30；科目＋30；完成狀態＋50。</p>
+          <button class="primary-button submit-reading-button" type="submit">提交閱讀紀錄</button>
         </form>
 
         <section class="my-progress-card">
@@ -79,7 +131,7 @@
           <div>
             <span>跑步距離</span>
             <strong id="myDistance">0</strong>
-            <small>米</small>
+            <small>里</small>
           </div>
         </section>
 
@@ -96,7 +148,7 @@
               <p class="eyebrow">17 CLASSROOMS</p>
               <h2 id="overviewTitle">全校課室狀況</h2>
             </div>
-            <p>按課室可查看最多 26 名學生在跑道上的即時位置。</p>
+            <p>按課室可查看最多 26 名學生在 25,000 里跑道上的即時位置。</p>
           </div>
           <div id="classroomGrid" class="classroom-grid"></div>
         </section>
@@ -104,7 +156,7 @@
         <section class="track-section" aria-labelledby="trackTitle">
           <div class="section-heading track-heading">
             <div>
-              <p class="eyebrow">LIVE 3D TRACK</p>
+              <p class="eyebrow">LIVE 3D TRACK · 25,000 里</p>
               <h2 id="trackTitle">課室跑道</h2>
             </div>
             <div class="track-stats">
@@ -117,6 +169,17 @@
             <div id="trackCanvas" class="track-canvas" aria-label="3D 學生跑道"></div>
             <div id="trackEmpty" class="track-empty">這個課室尚未有學生登入。</div>
           </div>
+
+          <section class="leaderboard-section" aria-labelledby="leaderboardTitle">
+            <div class="leaderboard-heading">
+              <div>
+                <p class="eyebrow">TOP 5</p>
+                <h3 id="leaderboardTitle">班級閱讀里數龍虎榜</h3>
+              </div>
+              <span id="leaderboardClass">—</span>
+            </div>
+            <ol id="leaderboardList" class="leaderboard-list"></ol>
+          </section>
 
           <div id="runnerList" class="runner-list" aria-live="polite"></div>
         </section>
@@ -134,6 +197,6 @@
       }
     }
   </script>
-  <script type="module" src="./app.js?v=20260703-2108"></script>
+  <script type="module" src="./app.js?v=20260703-25000"></script>
 </body>
 </html>

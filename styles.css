@@ -66,7 +66,7 @@ button { cursor: pointer; }
   letter-spacing: .16em;
 }
 
-h1, h2, p { margin-top: 0; }
+h1, h2, h3, p { margin-top: 0; }
 .login-card h1 { margin-bottom: 12px; font-size: clamp(28px, 7vw, 40px); }
 .login-intro { color: var(--muted); line-height: 1.7; }
 
@@ -133,7 +133,7 @@ input:focus, select:focus {
 
 .main-layout {
   display: grid;
-  grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(290px, 360px) minmax(0, 1fr);
   gap: 24px;
   width: min(1600px, 100%);
   margin: 0 auto;
@@ -141,7 +141,7 @@ input:focus, select:focus {
 }
 
 .sidebar { display: grid; align-content: start; gap: 16px; position: sticky; top: 104px; }
-.student-panel, .book-form, .my-progress-card, .recent-book-card, .overview-section, .track-section {
+.student-panel, .book-form, .my-progress-card, .recent-book-card, .overview-section, .track-section, .leaderboard-section {
   border: 1px solid rgba(220,231,239,.95);
   border-radius: 22px;
   background: rgba(255,255,255,.94);
@@ -154,9 +154,19 @@ input:focus, select:focus {
 .student-panel span { color: var(--muted); font-size: 13px; }
 
 .book-form { padding: 18px; }
-.book-form > label { font-size: 18px; font-weight: 900; }
-.book-input-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+.book-form-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.book-form-heading > label { font-size: 18px; font-weight: 900; }
+.book-form-heading > span { flex: 0 0 auto; padding: 5px 9px; border-radius: 999px; color: #7a4d00; background: #fff3c4; font-size: 11px; font-weight: 900; }
+.book-fields { display: grid; gap: 12px; }
+.book-fields label { display: grid; gap: 6px; }
+.book-fields label > span { color: var(--ink); font-size: 12px; font-weight: 800; }
+.book-fields em { color: var(--danger); font-size: 10px; font-style: normal; }
 .book-form p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.submit-reading-button { width: 100%; }
+.score-preview { display: flex; align-items: baseline; justify-content: center; gap: 6px; padding: 12px; border: 1px solid #f4d06f; border-radius: 16px; background: #fffaf0; }
+.score-preview span { color: var(--muted); font-size: 12px; font-weight: 800; }
+.score-preview strong { color: #9a5d00; font-size: 30px; }
+.score-preview small { color: #9a5d00; font-weight: 900; }
 
 .my-progress-card { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
 .my-progress-card > div { padding: 18px; }
@@ -210,6 +220,21 @@ input:focus, select:focus {
 .track-canvas { position: absolute; inset: 0; }
 .track-canvas canvas { display: block; width: 100%; height: 100%; }
 .track-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; color: #36556d; font-weight: 900; text-align: center; pointer-events: none; }
+
+.leaderboard-section { margin-top: 16px; padding: 18px; background: linear-gradient(145deg, #fffdf6, #fff8dc); }
+.leaderboard-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 12px; }
+.leaderboard-heading h3 { margin: 0; font-size: 20px; }
+.leaderboard-heading > span { color: var(--muted); font-size: 12px; font-weight: 800; }
+.leaderboard-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; counter-reset: rank; }
+.leaderboard-item { counter-increment: rank; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; border: 1px solid rgba(220,193,104,.45); border-radius: 14px; background: rgba(255,255,255,.88); }
+.leaderboard-rank { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #eef4f8; font-weight: 900; }
+.leaderboard-item:nth-child(1) .leaderboard-rank { background: #ffe08a; }
+.leaderboard-item:nth-child(2) .leaderboard-rank { background: #e8edf2; }
+.leaderboard-item:nth-child(3) .leaderboard-rank { background: #f3c49c; }
+.leaderboard-student { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 900; }
+.leaderboard-distance { color: var(--brand-dark); font-weight: 900; }
+.leaderboard-empty { padding: 16px; border: 1px dashed var(--line); border-radius: 14px; color: var(--muted); text-align: center; }
+
 .runner-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 10px; margin-top: 14px; }
 .runner-chip { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
 .runner-chip.is-me { border-color: var(--accent); background: #fffaf0; }
@@ -240,5 +265,6 @@ input:focus, select:focus {
   .track-stats { justify-content: flex-start; }
   .classroom-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .track-shell { min-height: 410px; }
-  .book-input-row { grid-template-columns: 1fr; }
+  .leaderboard-heading { align-items: flex-start; flex-direction: column; }
+  .leaderboard-item { grid-template-columns: 38px minmax(0, 1fr) auto; padding-inline: 8px; }
 }

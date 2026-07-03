@@ -28,12 +28,16 @@ const dom = {
   loginClass: $("#loginClass"), studentId: $("#studentId"), loginButton: $("#loginButton"),
   loginMessage: $("#loginMessage"), logoutButton: $("#logoutButton"), schoolTitle: $("#schoolTitle"),
   syncStatus: $("#syncStatus"), currentStudentLabel: $("#currentStudentLabel"),
-  currentClassLabel: $("#currentClassLabel"), bookForm: $("#bookForm"), bookTitle: $("#bookTitle"),
-  myBooksCount: $("#myBooksCount"), myDistance: $("#myDistance"), myLastBook: $("#myLastBook"),
-  classroomGrid: $("#classroomGrid"), trackTitle: $("#trackTitle"),
-  trackRunnerCount: $("#trackRunnerCount"), trackLeader: $("#trackLeader"),
-  trackCanvas: $("#trackCanvas"), trackEmpty: $("#trackEmpty"), runnerList: $("#runnerList"),
-  toastRegion: $("#toastRegion"),
+  currentClassLabel: $("#currentClassLabel"), bookForm: $("#bookForm"),
+  readingDate: $("#readingDate"), bookTitle: $("#bookTitle"), bookAuthor: $("#bookAuthor"),
+  readingType: $("#readingType"), bookSubject: $("#bookSubject"),
+  readingCompleted: $("#readingCompleted"), scorePreview: $("#scorePreview"),
+  bookSubmit: $(".submit-reading-button"), myBooksCount: $("#myBooksCount"),
+  myDistance: $("#myDistance"), myLastBook: $("#myLastBook"), classroomGrid: $("#classroomGrid"),
+  trackTitle: $("#trackTitle"), trackRunnerCount: $("#trackRunnerCount"),
+  trackLeader: $("#trackLeader"), trackCanvas: $("#trackCanvas"), trackEmpty: $("#trackEmpty"),
+  leaderboardClass: $("#leaderboardClass"), leaderboardList: $("#leaderboardList"),
+  runnerList: $("#runnerList"), toastRegion: $("#toastRegion"),
 };
 
 const state = {
@@ -97,7 +101,8 @@ class TrackScene {
     }
 
     for (let marker = 0; marker <= 5; marker += 1) {
-      const label = this.label(`${marker * 500}m`, "#173f5f", "rgba(255,255,255,.94)", 1.5);
+      const distance = Math.round((APP_CONFIG.trackDistance * marker) / 5);
+      const label = this.label(`${formatNumber(distance)}里`, "#173f5f", "rgba(255,255,255,.94)", 1.35);
       label.position.set(14.5, 1.7, 27 - marker * 27.8);
       this.scene.add(label);
     }
@@ -121,7 +126,7 @@ class TrackScene {
       this.scene.remove(group);
       group.traverse((object) => {
         object.geometry?.dispose?.();
-        if (Array.isArray(object.material)) object.material.forEach((m) => m.dispose());
+        if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose());
         else object.material?.dispose?.();
       });
     });
@@ -136,7 +141,7 @@ class TrackScene {
     const group = new THREE.Group();
     const lane = index % 8;
     const pack = Math.floor(index / 8);
-    const progress = Math.min(1, Number(student.distance || 0) / 2500);
+    const progress = Math.min(1, Number(student.distance || 0) / APP_CONFIG.trackDistance);
     group.position.set(-10.7 + lane * 3.06, 0.35, 25.2 - progress * 134 - pack * 1.2);
 
     const colours = [0x176b87, 0xff7b54, 0x6a4c93, 0x2a9d8f, 0xe76f51, 0x3a86ff, 0x8a5a44, 0x5f6caf];
@@ -159,10 +164,10 @@ class TrackScene {
     group.add(leftArm, rightArm, leftLeg, rightLeg);
 
     const label = this.label(
-      `${student.studentId} · ${Number(student.booksCount || 0)}本`,
+      `${student.studentId} · ${formatNumber(student.distance)}里`,
       isMe ? "#6b4900" : "#173f5f",
       isMe ? "#fff3bf" : "rgba(255,255,255,.94)",
-      1.15,
+      1.05,
     );
     label.position.set(0, 4.5, 0);
     group.add(label);
@@ -189,15 +194,15 @@ class TrackScene {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
     canvas.height = 160;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = backgroundColor;
-    roundedRect(ctx, 10, 14, 492, 132, 34);
-    ctx.fill();
-    ctx.fillStyle = textColor;
-    ctx.font = "700 54px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, 256, 82, 460);
+    const context = canvas.getContext("2d");
+    context.fillStyle = backgroundColor;
+    roundedRect(context, 10, 14, 492, 132, 34);
+    context.fill();
+    context.fillStyle = textColor;
+    context.font = "700 54px sans-serif";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(text, 256, 82, 460);
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
@@ -218,15 +223,15 @@ class TrackScene {
     requestAnimationFrame(this.animate);
     const time = this.clock.getElapsedTime();
     this.runners.forEach((group) => {
-      const d = group.userData;
-      const swing = Math.sin(time * 7.5 + d.phase) * 0.75;
-      d.leftArm.rotation.x = swing;
-      d.rightArm.rotation.x = -swing;
-      d.leftLeg.rotation.x = -swing * 0.78;
-      d.rightLeg.rotation.x = swing * 0.78;
-      group.position.y = d.baseY + Math.abs(Math.sin(time * 7.5 + d.phase)) * 0.1;
-      d.torso.rotation.z = Math.sin(time * 3.7 + d.phase) * 0.035;
-      d.head.rotation.y = Math.sin(time * 2.2 + d.phase) * 0.08;
+      const data = group.userData;
+      const swing = Math.sin(time * 7.5 + data.phase) * 0.75;
+      data.leftArm.rotation.x = swing;
+      data.rightArm.rotation.x = -swing;
+      data.leftLeg.rotation.x = -swing * 0.78;
+      data.rightLeg.rotation.x = swing * 0.78;
+      group.position.y = data.baseY + Math.abs(Math.sin(time * 7.5 + data.phase)) * 0.1;
+      data.torso.rotation.z = Math.sin(time * 3.7 + data.phase) * 0.035;
+      data.head.rotation.y = Math.sin(time * 2.2 + data.phase) * 0.08;
     });
     this.renderer.render(this.scene, this.camera);
   };
@@ -235,7 +240,8 @@ class TrackScene {
 async function boot() {
   track = new TrackScene(dom.trackCanvas);
   dom.schoolTitle.textContent = APP_CONFIG.schoolName;
-  dom.loginClass.replaceChildren(...APP_CONFIG.classrooms.map((room) => option(room.id, room.name)));
+  dom.loginClass.replaceChildren(...APP_CONFIG.classrooms.map((roomItem) => option(roomItem.id, roomItem.name)));
+  resetReadingForm();
   bindEvents();
 
   if (state.cloud) await connectFirebase();
@@ -267,12 +273,20 @@ function bindEvents() {
     showLogin();
   });
 
+  dom.bookForm.addEventListener("input", updateScorePreview);
+  dom.bookForm.addEventListener("change", updateScorePreview);
   dom.bookForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const title = dom.bookTitle.value.trim().replace(/\s+/g, " ").slice(0, 80);
-    if (!title || !state.user || state.saving) return;
-    dom.bookTitle.value = "";
-    await addBook(title);
+    if (!state.user || state.saving) return;
+
+    const record = readReadingForm();
+    if (!record.title || !record.author) {
+      toast("請輸入書本名稱及作者名稱。", true);
+      return;
+    }
+
+    await addBook(record);
+    resetReadingForm();
   });
 
   addEventListener("online", () => state.cloud && flushPending());
@@ -311,15 +325,20 @@ async function login(classId, rawId, restored = false) {
 
   if (state.cloud) {
     sync("saving", "● 載入進度中");
-    const ref = doc(state.db, "students", state.user.key);
-    const existing = await getDoc(ref);
+    const reference = doc(state.db, "students", state.user.key);
+    const existing = await getDoc(reference);
     if (existing.exists()) {
-      await setDoc(ref, { classId, studentId, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(reference, { classId, studentId, updatedAt: serverTimestamp() }, { merge: true });
     } else {
-      await setDoc(ref, { classId, studentId, booksCount: 0, distance: 0, lastBook: "", createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      await setDoc(reference, {
+        classId, studentId, booksCount: 0, distance: 0, lastBook: "", lastAuthor: "",
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      });
     }
   } else if (!state.students.some((student) => student.id === state.user.key)) {
-    state.students.push({ id: state.user.key, classId, studentId, booksCount: 0, distance: 0, lastBook: "" });
+    state.students.push({
+      id: state.user.key, classId, studentId, booksCount: 0, distance: 0, lastBook: "", lastAuthor: "",
+    });
     write(KEYS.demo, state.students);
   }
 
@@ -332,13 +351,20 @@ async function login(classId, rawId, restored = false) {
   if (!restored) toast(`歡迎回來，${studentId}！`);
 }
 
-async function addBook(title) {
+async function addBook(record) {
+  const distanceAwarded = scoreReading(record);
   const event = {
     id: crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    classId: state.user.classId, studentId: state.user.studentId, studentKey: state.user.key,
-    title, createdAt: new Date().toISOString(),
+    classId: state.user.classId,
+    studentId: state.user.studentId,
+    studentKey: state.user.key,
+    ...record,
+    distanceAwarded,
+    createdAt: new Date().toISOString(),
   };
+
   state.saving = true;
+  dom.bookSubmit.disabled = true;
   sync("saving", "● 儲存中");
   applyBook(event);
   try {
@@ -350,22 +376,47 @@ async function addBook(title) {
       write(KEYS.demo, state.students);
       sync("error", "● 已儲存在本機（未連接 Firebase）");
     }
-    toast(`《${title}》已記錄，向前跑 ${APP_CONFIG.distancePerBook} 米！`);
+    toast(`《${record.title}》已記錄，向前跑 ${distanceAwarded} 里！`);
   } catch (error) {
     console.error(error);
     queue(event);
     sync("error", "● 已離線暫存，連線後補交");
     toast("網絡暫時中斷，紀錄已保留在此裝置。", true);
-  } finally { state.saving = false; }
+  } finally {
+    state.saving = false;
+    dom.bookSubmit.disabled = false;
+  }
 }
 
 async function commit(event) {
+  const distanceAwarded = eventDistance(event);
   const studentRef = doc(state.db, "students", event.studentKey);
   const logRef = doc(state.db, "bookLogs", event.id);
-  await runTransaction(state.db, async (tx) => {
-    if ((await tx.get(logRef)).exists()) return;
-    tx.set(logRef, { classId: event.classId, studentId: event.studentId, studentKey: event.studentKey, title: event.title, clientCreatedAt: event.createdAt, createdAt: serverTimestamp() });
-    tx.set(studentRef, { classId: event.classId, studentId: event.studentId, booksCount: increment(1), distance: increment(APP_CONFIG.distancePerBook), lastBook: event.title, updatedAt: serverTimestamp() }, { merge: true });
+  await runTransaction(state.db, async (transaction) => {
+    if ((await transaction.get(logRef)).exists()) return;
+    transaction.set(logRef, {
+      classId: event.classId,
+      studentId: event.studentId,
+      studentKey: event.studentKey,
+      readingDate: event.readingDate || "",
+      title: event.title || "",
+      author: event.author || "",
+      readingType: event.readingType || "",
+      subject: event.subject || "",
+      completed: event.completed || "",
+      distanceAwarded,
+      clientCreatedAt: event.createdAt || "",
+      createdAt: serverTimestamp(),
+    });
+    transaction.set(studentRef, {
+      classId: event.classId,
+      studentId: event.studentId,
+      booksCount: increment(1),
+      distance: increment(distanceAwarded),
+      lastBook: event.title || "",
+      lastAuthor: event.author || "",
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
   });
 }
 
@@ -382,9 +433,27 @@ async function flushPending() {
 }
 
 function applyBook(event) {
+  const distanceAwarded = eventDistance(event);
   const index = state.students.findIndex((student) => student.id === event.studentKey);
-  if (index >= 0) state.students[index] = { ...state.students[index], booksCount: Number(state.students[index].booksCount || 0) + 1, distance: Number(state.students[index].distance || 0) + APP_CONFIG.distancePerBook, lastBook: event.title };
-  else state.students.push({ id: event.studentKey, classId: event.classId, studentId: event.studentId, booksCount: 1, distance: APP_CONFIG.distancePerBook, lastBook: event.title });
+  if (index >= 0) {
+    state.students[index] = {
+      ...state.students[index],
+      booksCount: Number(state.students[index].booksCount || 0) + 1,
+      distance: Number(state.students[index].distance || 0) + distanceAwarded,
+      lastBook: event.title || "",
+      lastAuthor: event.author || "",
+    };
+  } else {
+    state.students.push({
+      id: event.studentKey,
+      classId: event.classId,
+      studentId: event.studentId,
+      booksCount: 1,
+      distance: distanceAwarded,
+      lastBook: event.title || "",
+      lastAuthor: event.author || "",
+    });
+  }
   renderAll();
 }
 
@@ -393,9 +462,11 @@ function renderAll() {
     const student = state.students.find((item) => item.id === state.user.key);
     dom.currentStudentLabel.textContent = state.user.studentId;
     dom.currentClassLabel.textContent = room(state.user.classId)?.name || state.user.classId;
-    dom.myBooksCount.textContent = number(student?.booksCount);
-    dom.myDistance.textContent = number(student?.distance);
-    dom.myLastBook.textContent = student?.lastBook || "尚未提交";
+    dom.myBooksCount.textContent = formatNumber(student?.booksCount);
+    dom.myDistance.textContent = formatNumber(student?.distance);
+    dom.myLastBook.textContent = student?.lastBook
+      ? `《${student.lastBook}》${student.lastAuthor ? `｜${student.lastAuthor}` : ""}`
+      : "尚未提交";
   }
 
   dom.classroomGrid.replaceChildren(...APP_CONFIG.classrooms.map((classroom) => {
@@ -404,7 +475,7 @@ function renderAll() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `classroom-card${state.selectedClass === classroom.id ? " is-active" : ""}`;
-    button.innerHTML = `<span class="classroom-name">${escape(classroom.name)}</span><span class="classroom-meta"><span><strong>${students.length}</strong><br>名學生</span><span><strong>${number(total)}</strong><br>總米數</span></span>`;
+    button.innerHTML = `<span class="classroom-name">${escapeHtml(classroom.name)}</span><span class="classroom-meta"><span><strong>${students.length}</strong><br>名學生</span><span><strong>${formatNumber(total)}</strong><br>總里數</span></span>`;
     button.onclick = () => {
       state.selectedClass = classroom.id;
       renderAll();
@@ -413,20 +484,91 @@ function renderAll() {
     return button;
   }));
 
-  const selected = inClass(state.selectedClass)
-    .sort((a, b) => Number(b.distance || 0) - Number(a.distance || 0) || String(a.studentId).localeCompare(String(b.studentId)))
-    .slice(0, APP_CONFIG.maxRunnersPerClass);
-  dom.trackTitle.textContent = `${room(state.selectedClass)?.name || state.selectedClass} 跑道`;
+  const rankedStudents = inClass(state.selectedClass).sort(compareStudents);
+  const selected = rankedStudents.slice(0, APP_CONFIG.maxRunnersPerClass);
+  const selectedRoomName = room(state.selectedClass)?.name || state.selectedClass;
+  dom.trackTitle.textContent = `${selectedRoomName} 跑道`;
   dom.trackRunnerCount.textContent = String(selected.length);
   dom.trackLeader.textContent = selected[0]?.studentId || "—";
   dom.trackEmpty.classList.toggle("is-hidden", selected.length > 0);
   track.setStudents(selected, state.user?.key);
+  renderLeaderboard(rankedStudents.slice(0, 5), selectedRoomName);
+
   dom.runnerList.replaceChildren(...selected.map((student, index) => {
     const item = document.createElement("div");
     item.className = `runner-chip${student.id === state.user?.key ? " is-me" : ""}`;
-    item.innerHTML = `<span>${index === 0 ? "🏆 " : ""}${escape(student.studentId || "學生")}</span><small>${number(student.booksCount)} 本 · ${number(student.distance)} 米</small>`;
+    item.innerHTML = `<span>${index === 0 ? "🏆 " : ""}${escapeHtml(student.studentId || "學生")}</span><small>${formatNumber(student.booksCount)} 本 · ${formatNumber(student.distance)} 里</small>`;
     return item;
   }));
+}
+
+function renderLeaderboard(students, className) {
+  dom.leaderboardClass.textContent = className;
+  if (!students.length) {
+    const empty = document.createElement("li");
+    empty.className = "leaderboard-empty";
+    empty.textContent = "這個課室尚未有閱讀紀錄。";
+    dom.leaderboardList.replaceChildren(empty);
+    return;
+  }
+
+  const medals = ["🥇", "🥈", "🥉", "4", "5"];
+  dom.leaderboardList.replaceChildren(...students.map((student, index) => {
+    const item = document.createElement("li");
+    item.className = "leaderboard-item";
+    item.innerHTML = `
+      <span class="leaderboard-rank">${medals[index]}</span>
+      <span class="leaderboard-student">${escapeHtml(student.studentId || "學生")}</span>
+      <span class="leaderboard-distance">${formatNumber(student.distance)} 里</span>
+    `;
+    return item;
+  }));
+}
+
+function readReadingForm() {
+  return {
+    readingDate: dom.readingDate.value || "",
+    title: cleanText(dom.bookTitle.value, 80),
+    author: cleanText(dom.bookAuthor.value, 80),
+    readingType: dom.readingType.value || "",
+    subject: dom.bookSubject.value || "",
+    completed: dom.readingCompleted.value || "",
+  };
+}
+
+function resetReadingForm() {
+  dom.readingDate.value = todayForInput();
+  dom.bookTitle.value = "";
+  dom.bookAuthor.value = "";
+  dom.readingType.value = "";
+  dom.bookSubject.value = "";
+  dom.readingCompleted.value = "";
+  updateScorePreview();
+}
+
+function updateScorePreview() {
+  dom.scorePreview.textContent = String(scoreReading(readReadingForm()));
+}
+
+function scoreReading(record) {
+  if (!record.title || !record.author) return 0;
+  let score = APP_CONFIG.scoring.base;
+  if (record.readingType) score += APP_CONFIG.scoring.readingType;
+  if (record.subject) score += APP_CONFIG.scoring.subject;
+  if (record.completed) score += APP_CONFIG.scoring.completion;
+  return score;
+}
+
+function eventDistance(event) {
+  const value = Number(event?.distanceAwarded);
+  if (Number.isFinite(value) && value >= 0) return value;
+  return Number(APP_CONFIG.legacyDistancePerBook || 100);
+}
+
+function compareStudents(a, b) {
+  return Number(b.distance || 0) - Number(a.distance || 0)
+    || Number(b.booksCount || 0) - Number(a.booksCount || 0)
+    || String(a.studentId || "").localeCompare(String(b.studentId || ""));
 }
 
 function showLogin() {
@@ -446,12 +588,17 @@ function inClass(classId) { return state.students.filter((student) => student.cl
 function room(id) { return APP_CONFIG.classrooms.find((item) => item.id === id); }
 function roomExists(id) { return Boolean(room(id)); }
 function normaliseId(value) { return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 20); }
-function number(value) { return new Intl.NumberFormat("zh-HK").format(Number(value || 0)); }
+function cleanText(value, maxLength) { return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength); }
+function formatNumber(value) { return new Intl.NumberFormat("zh-HK").format(Number(value || 0)); }
 function option(value, text) { const element = document.createElement("option"); element.value = value; element.textContent = text; return element; }
 function sync(status, text) { dom.syncStatus.dataset.state = status; dom.syncStatus.textContent = text; }
 function read(key, fallback) { try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
 function write(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
-function escape(value) { return String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c])); }
+function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character])); }
+function todayForInput() {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
 function friendlyError(error) {
   if (error?.message === "INVALID_LOGIN") return "課室或學生 ID 不正確。";
   if (error?.code === "auth/operation-not-allowed") return "請先在 Firebase Authentication 啟用匿名登入。";
@@ -465,15 +612,15 @@ function toast(message, error = false) {
   dom.toastRegion.append(item);
   setTimeout(() => item.remove(), 3600);
 }
-function roundedRect(ctx, x, y, width, height, radius) {
-  const r = Math.min(radius, width / 2, height / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + width, y, x + width, y + height, r);
-  ctx.arcTo(x + width, y + height, x, y + height, r);
-  ctx.arcTo(x, y + height, x, y, r);
-  ctx.arcTo(x, y, x + width, y, r);
-  ctx.closePath();
+function roundedRect(context, x, y, width, height, radius) {
+  const adjustedRadius = Math.min(radius, width / 2, height / 2);
+  context.beginPath();
+  context.moveTo(x + adjustedRadius, y);
+  context.arcTo(x + width, y, x + width, y + height, adjustedRadius);
+  context.arcTo(x + width, y + height, x, y + height, adjustedRadius);
+  context.arcTo(x, y + height, x, y, adjustedRadius);
+  context.arcTo(x, y, x + width, y, adjustedRadius);
+  context.closePath();
 }
 
 boot().catch((error) => {
