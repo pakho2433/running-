@@ -1,0 +1,15 @@
+.student-security-notice {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 14px;
+  border: 1px solid rgba(29, 136, 89, .26);
+  border-radius: 16px;
+  padding: 12px 14px;
+  color: #285847;
+  background: linear-gradient(135deg, #effcf5, #f6fffb);
+  box-shadow: 0 8px 20px rgba(28, 104, 72, .08);
+}
+.student-security-notice strong { font-size: 12px; font-weight: 1000; }
+.student-security-notice span { font-size: 11px; font-weight: 750; line-height: 1.5; }
+.sync-status[data-state="error"] { max-width: 360px; }
+@media (max-width: 580px) { .student-security-notice { padding: 11px 12px; } }
