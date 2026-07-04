@@ -22,6 +22,29 @@ service cloud.firestore {
           || request.resource.data.dailyDateKey is string);
     }
 
+    function validRecommendation() {
+      return request.resource.data.dateKey is string
+        && request.resource.data.dateKey.size() == 10
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 1
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.author is string
+        && request.resource.data.author.size() >= 1
+        && request.resource.data.author.size() <= 100
+        && request.resource.data.coverUrl is string
+        && request.resource.data.coverUrl.size() <= 600
+        && request.resource.data.grade is string
+        && request.resource.data.grade.size() <= 40
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() <= 600
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 500
+        && request.resource.data.platformUrl is string
+        && request.resource.data.platformUrl.size() >= 1
+        && request.resource.data.platformUrl.size() <= 600
+        && request.resource.data.published is bool;
+    }
+
     match /students/{studentKey} {
       allow read: if signedIn();
       allow create, update: if signedIn() && validStudent();
@@ -31,6 +54,12 @@ service cloud.firestore {
     match /bookLogs/{logId} {
       allow read, create: if signedIn();
       allow update, delete: if false;
+    }
+
+    match /dailyRecommendations/{dateKey} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && validRecommendation();
+      allow delete: if signedIn();
     }
   }
 }
