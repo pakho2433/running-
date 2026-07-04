@@ -17,6 +17,7 @@ const currentLocationLabel = document.querySelector("#currentLocationLabel");
 loadDeviceLayout();
 loadDailyLimitAssets();
 loadTeacherCenterAssets();
+loadRecommendationAssets();
 
 if (locationButtons) {
   new MutationObserver(decorateLocationCards).observe(locationButtons, { childList: true });
@@ -154,6 +155,20 @@ function loadTeacherCenterAssets() {
 
   import("./teacher-center.js?v=20260704-teacher-center-1").catch((error) => {
     console.error("Unable to load teacher data center", error);
+  });
+}
+
+function loadRecommendationAssets() {
+  if (!document.querySelector('link[data-daily-recommendation="true"]')) {
+    const stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = "./daily-book-recommendation.css?v=20260704-recommendation-1";
+    stylesheet.dataset.dailyRecommendation = "true";
+    document.head.append(stylesheet);
+  }
+
+  import("./daily-book-recommendation.js?v=20260704-recommendation-1").catch((error) => {
+    console.error("Unable to load daily book recommendation", error);
   });
 }
 
