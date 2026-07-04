@@ -1,10 +1,12 @@
-// Reading Run Firebase config — cache-busted deployment version.
+// Emergency privacy mode for student-facing modules.
+// The real Firebase configuration remains in firebase-config.js and is imported only
+// by secured teacher/recommendation modules using a cache-busted specifier.
 export const firebaseConfig = {
-  apiKey: "AIzaSyB2Drw3jtbvMuAtR_4KGN1J63_BU01ECO0",
-  authDomain: "book-running.firebaseapp.com",
-  projectId: "book-running",
-  storageBucket: "book-running.firebasestorage.app",
-  messagingSenderId: "290164830206",
-  appId: "1:290164830206:web:49509d69e702593e1c5aaf",
-  measurementId: "G-LY7ZCKGE98",
+  apiKey: "DISABLED",
+  authDomain: "DISABLED",
+  projectId: "DISABLED",
+  storageBucket: "DISABLED",
+  messagingSenderId: "DISABLED",
+  appId: "DISABLED",
+  measurementId: "DISABLED",
 };
