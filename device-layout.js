@@ -53,7 +53,30 @@
     resizeTimer = setTimeout(detectDevice, 90);
   }
 
+  function loadRecommendationFeatures() {
+    addStylesheet("./daily-recommendation.css?v=20260704-recommendation-1", "daily-recommendation");
+    addStylesheet("./teacher-recommendations.css?v=20260704-recommendation-1", "teacher-recommendations");
+
+    import("./daily-recommendation.js?v=20260704-recommendation-1").catch((error) => {
+      console.error("Unable to load daily recommendation", error);
+    });
+
+    import("./teacher-recommendations.js?v=20260704-recommendation-1").catch((error) => {
+      console.error("Unable to load teacher recommendation scheduler", error);
+    });
+  }
+
+  function addStylesheet(href, key) {
+    if (document.querySelector(`link[data-feature-style="${key}"]`)) return;
+    const stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = href;
+    stylesheet.dataset.featureStyle = key;
+    document.head.append(stylesheet);
+  }
+
   detectDevice();
+  loadRecommendationFeatures();
   window.addEventListener("resize", scheduleDetection, { passive: true });
   window.addEventListener("orientationchange", () => setTimeout(detectDevice, 180), { passive: true });
   window.visualViewport?.addEventListener("resize", scheduleDetection, { passive: true });

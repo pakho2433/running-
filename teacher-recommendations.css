@@ -1,0 +1,294 @@
+.teacher-recommendation-manager {
+  margin-top: 16px;
+  border: 1px solid rgba(89, 109, 255, .14);
+  border-radius: 22px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 222, 117, .18), transparent 20rem),
+    linear-gradient(145deg, #ffffff, #f7fbff 58%, #fff7fb);
+  box-shadow: 0 12px 30px rgba(58, 92, 126, .09);
+}
+
+.teacher-recommendation-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.teacher-recommendation-heading p {
+  margin: 0 0 4px;
+  color: #596dff;
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: .1em;
+}
+
+.teacher-recommendation-heading h3 {
+  margin: 0;
+  color: #173f5f;
+  font-size: 20px;
+}
+
+.teacher-recommendation-heading span {
+  display: block;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.teacher-recommendation-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, .9fr) minmax(360px, 1.1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.teacher-recommendation-form,
+.teacher-recommendation-list-wrap {
+  border: 1px solid rgba(89, 109, 255, .11);
+  border-radius: 18px;
+  padding: 15px;
+  background: rgba(255,255,255,.9);
+}
+
+.teacher-recommendation-form {
+  display: grid;
+  gap: 12px;
+}
+
+.teacher-recommendation-form label {
+  display: grid;
+  gap: 6px;
+  color: #38516b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.teacher-recommendation-form input,
+.teacher-recommendation-form textarea {
+  width: 100%;
+  border: 1px solid #d6e2ec;
+  border-radius: 13px;
+  padding: 11px 12px;
+  color: #173f5f;
+  background: #fff;
+  font: inherit;
+}
+
+.teacher-recommendation-form textarea {
+  resize: vertical;
+  min-height: 86px;
+}
+
+.teacher-recommendation-form small {
+  color: #7b8b9c;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.teacher-recommendation-published {
+  grid-template-columns: auto 1fr !important;
+  align-items: center;
+  gap: 9px !important;
+}
+
+.teacher-recommendation-published input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.teacher-recommendation-form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.teacher-recommendation-message {
+  min-height: 19px;
+  margin: 0;
+  color: #2b6b54;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.teacher-recommendation-message[data-state="error"] {
+  color: #b42318;
+}
+
+.teacher-recommendation-list-wrap {
+  min-width: 0;
+}
+
+.teacher-recommendation-list-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.teacher-recommendation-list-heading strong {
+  display: block;
+  color: #173f5f;
+  font-size: 16px;
+}
+
+.teacher-recommendation-list-heading span {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.teacher-recommendation-count {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: #4b4fa5 !important;
+  background: #eef0ff;
+  font-weight: 1000;
+}
+
+.teacher-recommendation-list {
+  display: grid;
+  gap: 9px;
+  max-height: 680px;
+  overflow: auto;
+  padding-right: 3px;
+}
+
+.teacher-recommendation-item {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid #e4edf4;
+  border-radius: 15px;
+  padding: 10px;
+  background: #fff;
+}
+
+.teacher-recommendation-item.is-today {
+  border-color: rgba(29, 191, 146, .45);
+  background: linear-gradient(135deg, #f1fff9, #fff);
+}
+
+.teacher-recommendation-item.is-unpublished {
+  opacity: .65;
+}
+
+.teacher-recommendation-item-cover {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  width: 58px;
+  height: 72px;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(145deg, #77d5ff, #7f77ff 52%, #ff8fb5);
+  font-size: 28px;
+}
+
+.teacher-recommendation-item-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teacher-recommendation-item-details {
+  min-width: 0;
+}
+
+.teacher-recommendation-item-details > * {
+  display: block;
+}
+
+.teacher-recommendation-item-date {
+  margin-bottom: 3px;
+  color: #596dff;
+  font-size: 10px;
+  font-weight: 1000;
+}
+
+.teacher-recommendation-item-details strong {
+  overflow: hidden;
+  color: #173f5f;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teacher-recommendation-item-details small {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.teacher-recommendation-item-actions {
+  display: grid;
+  gap: 6px;
+}
+
+.teacher-recommendation-item-actions button {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.teacher-recommendation-empty {
+  margin: 0;
+  border-radius: 13px;
+  padding: 16px;
+  color: #64748b;
+  background: #f5f9fc;
+  font-size: 12px;
+  text-align: center;
+}
+
+.teacher-recommendation-empty.is-error {
+  color: #b42318;
+  background: #fff0f2;
+}
+
+@media (max-width: 900px) {
+  .teacher-recommendation-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-recommendation-list {
+    max-height: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .teacher-recommendation-manager {
+    padding: 12px;
+  }
+
+  .teacher-recommendation-heading {
+    flex-direction: column;
+  }
+
+  .teacher-recommendation-heading button {
+    width: 100%;
+  }
+
+  .teacher-recommendation-form-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-recommendation-item {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .teacher-recommendation-item-cover {
+    width: 52px;
+    height: 66px;
+  }
+
+  .teacher-recommendation-item-actions {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
+  }
+}
