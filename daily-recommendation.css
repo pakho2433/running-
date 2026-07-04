@@ -1,0 +1,244 @@
+.daily-recommendation-section {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(89, 109, 255, .16);
+  border-radius: 28px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 95% 0%, rgba(255, 225, 103, .28), transparent 18rem),
+    radial-gradient(circle at 0% 100%, rgba(111, 218, 255, .22), transparent 22rem),
+    linear-gradient(145deg, #ffffff, #f5fbff 54%, #fff4fa);
+  box-shadow: 0 18px 48px rgba(58, 92, 126, .12);
+}
+
+.daily-recommendation-section.is-login-hidden {
+  display: none;
+}
+
+.daily-recommendation-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6f91, #596dff 56%, #1dbf92);
+  box-shadow: 0 8px 20px rgba(73, 91, 203, .22);
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: .03em;
+}
+
+.daily-recommendation-card {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.daily-recommendation-cover-wrap {
+  position: relative;
+  overflow: hidden;
+  min-height: 290px;
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 22px;
+  background: linear-gradient(145deg, #7dd6ff, #7c7cff 48%, #ff8fb5);
+  box-shadow: 0 16px 34px rgba(56, 79, 150, .22);
+}
+
+.daily-recommendation-cover,
+.daily-recommendation-cover-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.daily-recommendation-cover {
+  display: none;
+  object-fit: cover;
+}
+
+.daily-recommendation-section.has-cover .daily-recommendation-cover {
+  display: block;
+}
+
+.daily-recommendation-cover-fallback {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  color: #fff;
+  text-align: center;
+}
+
+.daily-recommendation-cover-fallback span {
+  font-size: 74px;
+  filter: drop-shadow(0 10px 14px rgba(32, 43, 92, .22));
+}
+
+.daily-recommendation-cover-fallback strong {
+  font-size: 20px;
+  letter-spacing: .08em;
+}
+
+.daily-recommendation-section.has-cover .daily-recommendation-cover-fallback {
+  display: none;
+}
+
+.daily-recommendation-content {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  min-width: 0;
+}
+
+.daily-recommendation-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.daily-recommendation-date {
+  margin: 0 0 5px;
+  color: #596dff;
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: .04em;
+}
+
+.daily-recommendation-heading h2 {
+  margin: 0;
+  color: #173f5f;
+  font-size: clamp(24px, 4vw, 38px);
+  line-height: 1.15;
+}
+
+.daily-recommendation-author {
+  margin: 8px 0 0;
+  color: #53677f;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.daily-recommendation-grade {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: #7c3f00;
+  background: linear-gradient(135deg, #fff2a8, #ffd48c);
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.daily-recommendation-summary,
+.daily-recommendation-reason-wrap p,
+.daily-recommendation-note,
+.daily-recommendation-status {
+  margin: 0;
+  color: #53677f;
+  line-height: 1.65;
+}
+
+.daily-recommendation-summary {
+  font-size: 14px;
+}
+
+.daily-recommendation-reason-wrap {
+  border: 1px solid rgba(89,109,255,.12);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.75);
+}
+
+.daily-recommendation-reason-wrap strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #38516b;
+  font-size: 12px;
+}
+
+.daily-recommendation-reason-wrap p {
+  font-size: 13px;
+}
+
+.daily-recommendation-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 58px;
+  border-radius: 17px;
+  padding: 10px 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6f91, #596dff 55%, #1dbf92);
+  box-shadow: 0 12px 28px rgba(73, 91, 203, .24);
+  text-decoration: none;
+}
+
+.daily-recommendation-action strong {
+  font-size: 16px;
+}
+
+.daily-recommendation-action span {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.daily-recommendation-action:hover,
+.daily-recommendation-action:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(73, 91, 203, .3);
+}
+
+.daily-recommendation-action.is-disabled {
+  pointer-events: none;
+  opacity: .6;
+}
+
+.daily-recommendation-note {
+  font-size: 11px;
+}
+
+.daily-recommendation-status {
+  min-height: 18px;
+  color: #b42318;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .daily-recommendation-section {
+    border-radius: 22px;
+    padding: 14px;
+  }
+
+  .daily-recommendation-card {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-recommendation-cover-wrap {
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+
+  .daily-recommendation-heading {
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .daily-recommendation-action {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-recommendation-action {
+    transition: none;
+  }
+}
