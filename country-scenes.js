@@ -15,6 +15,7 @@ const locationButtons = document.querySelector("#locationButtons");
 const currentLocationLabel = document.querySelector("#currentLocationLabel");
 
 loadDeviceLayout();
+loadLocalModeAssets();
 loadDailyLimitAssets();
 loadTeacherCenterAssets();
 loadRecommendationAssets();
@@ -130,17 +131,26 @@ function loadDeviceLayout() {
   }
 }
 
+function loadLocalModeAssets() {
+  if (document.querySelector('link[data-local-mode="true"]')) return;
+  const stylesheet = document.createElement("link");
+  stylesheet.rel = "stylesheet";
+  stylesheet.href = "./local-mode.css?v=20260704-local-mode-1";
+  stylesheet.dataset.localMode = "true";
+  document.head.append(stylesheet);
+}
+
 function loadDailyLimitAssets() {
   if (!document.querySelector('link[data-daily-limit="true"]')) {
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = "./daily-limit.css?v=20260704-daily-limit-3";
+    stylesheet.href = "./daily-limit.css?v=20260704-local-limit-1";
     stylesheet.dataset.dailyLimit = "true";
     document.head.append(stylesheet);
   }
 
-  import("./daily-limit-v3.js?v=20260704-daily-limit-3").catch((error) => {
-    console.error("Unable to load daily submission limit", error);
+  import("./daily-limit-local.js?v=20260704-local-limit-1").catch((error) => {
+    console.error("Unable to load local daily limit", error);
   });
 }
 
@@ -148,13 +158,13 @@ function loadTeacherCenterAssets() {
   if (!document.querySelector('link[data-teacher-center="true"]')) {
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = "./teacher-center.css?v=20260704-teacher-center-1";
+    stylesheet.href = "./teacher-center.css?v=20260704-secure-teacher-1";
     stylesheet.dataset.teacherCenter = "true";
     document.head.append(stylesheet);
   }
 
-  import("./teacher-center.js?v=20260704-teacher-center-1").catch((error) => {
-    console.error("Unable to load teacher data center", error);
+  import("./teacher-center-secure.js?v=20260704-secure-teacher-1").catch((error) => {
+    console.error("Unable to load secured teacher data center", error);
   });
 }
 
@@ -162,13 +172,13 @@ function loadRecommendationAssets() {
   if (!document.querySelector('link[data-daily-recommendation="true"]')) {
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = "./daily-book-recommendation.css?v=20260704-recommendation-1";
+    stylesheet.href = "./daily-book-recommendation.css?v=20260704-secure-recommendation-1";
     stylesheet.dataset.dailyRecommendation = "true";
     document.head.append(stylesheet);
   }
 
-  import("./daily-book-recommendation.js?v=20260704-recommendation-1").catch((error) => {
-    console.error("Unable to load daily book recommendation", error);
+  import("./daily-book-recommendation-secure.js?v=20260704-secure-recommendation-1").catch((error) => {
+    console.error("Unable to load secured daily book recommendation", error);
   });
 }
 
