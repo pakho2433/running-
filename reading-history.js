@@ -1,20 +1,11 @@
-import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {
-  collection,
-  getDocs,
-  getFirestore,
-  query,
-  where,
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js";
-
 const buddyButton = document.querySelector("#readingBuddyButton");
 const modal = document.querySelector("#readingHistoryModal");
 const closeButton = document.querySelector("#readingHistoryClose");
 const list = document.querySelector("#readingHistoryList");
 const status = document.querySelector("#readingHistoryStatus");
 const summary = document.querySelector("#readingHistorySummary");
+const SESSION_KEY = "reading-run-session-v1";
+const HISTORY_PREFIX = "reading-run-local-history-v1";
 
 if (buddyButton && modal && closeButton && list && status && summary) {
   buddyButton.addEventListener("click", openHistory);
@@ -27,41 +18,26 @@ if (buddyButton && modal && closeButton && list && status && summary) {
   });
 }
 
-async function openHistory() {
+function openHistory() {
   modal.classList.remove("is-hidden");
   document.body.classList.add("history-open");
   closeButton.focus();
-  status.textContent = "正在載入閱讀歷史……";
+  status.classList.remove("is-error");
   summary.textContent = "";
   list.replaceChildren();
 
-  try {
-    const session = readSession();
-    if (!session?.classId || !session?.studentId) {
-      throw new Error("請先登入學生帳戶。重新整理後需要再次登入。 ");
-    }
-
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    if (!auth.currentUser) await signInAnonymously(auth);
-
-    const db = getFirestore(app);
-    const studentKey = `${session.classId}__${session.studentId}`;
-    const historyQuery = query(
-      collection(db, "bookLogs"),
-      where("studentKey", "==", studentKey),
-    );
-    const snapshot = await getDocs(historyQuery);
-    const records = snapshot.docs
-      .map((document) => ({ id: document.id, ...document.data() }))
-      .sort((a, b) => recordTime(b) - recordTime(a));
-
-    renderHistory(records, session.studentId);
-  } catch (error) {
-    console.error(error);
-    status.textContent = error?.message || "未能讀取閱讀歷史，請稍後再試。";
+  const session = readJson(SESSION_KEY, null);
+  if (!session?.classId || !session?.studentId) {
+    status.textContent = "請先登入學生帳戶。";
     status.classList.add("is-error");
+    return;
   }
+
+  const studentKey = `${session.classId}__${session.studentId}`;
+  const records = readJson(`${HISTORY_PREFIX}__${studentKey}`, [])
+    .slice()
+    .sort((a, b) => recordTime(b) - recordTime(a));
+  renderHistory(records, session.studentId);
 }
 
 function closeHistory() {
@@ -73,14 +49,14 @@ function closeHistory() {
 function renderHistory(records, studentId) {
   status.classList.remove("is-error");
   if (!records.length) {
-    status.textContent = "暫時未有閱讀紀錄。提交第一本書後，紀錄便會在這裏出現。";
+    status.textContent = "此裝置暫時未有閱讀紀錄。提交第一本書後，紀錄會顯示在這裏。";
     summary.textContent = `${studentId} · 0 本書`;
     return;
   }
 
   const totalDistance = records.reduce((sum, record) => sum + Number(record.distanceAwarded || 0), 0);
   summary.textContent = `${studentId} · ${records.length} 本書 · 共獲 ${formatNumber(totalDistance)} 里`;
-  status.textContent = `已顯示最近 ${records.length} 項閱讀紀錄`;
+  status.textContent = `已顯示此裝置保存的 ${records.length} 項紀錄`;
 
   const fragment = document.createDocumentFragment();
   records.forEach((record, index) => fragment.append(makeHistoryCard(record, index)));
@@ -131,16 +107,15 @@ function makeHistoryCard(record, index) {
   return article;
 }
 
-function readSession() {
+function readJson(key, fallback) {
   try {
-    return JSON.parse(localStorage.getItem("reading-run-session-v1") || "null");
+    return JSON.parse(localStorage.getItem(key) || "null") ?? fallback;
   } catch {
-    return null;
+    return fallback;
   }
 }
 
 function recordTime(record) {
-  if (record.createdAt?.toMillis) return record.createdAt.toMillis();
   const clientTime = Date.parse(record.clientCreatedAt || "");
   if (Number.isFinite(clientTime)) return clientTime;
   const readingTime = Date.parse(record.readingDate || "");
