@@ -59,15 +59,40 @@ service cloud.firestore {
           .hasOnly(["classId", "studentId", "updatedAt"]);
     }
 
+    function validDailyCounter() {
+      return (
+        request.resource.data.dailyDateKey == resource.data.dailyDateKey
+        && request.resource.data.dailyBooksCount == resource.data.dailyBooksCount + 1
+        && request.resource.data.dailyBooksCount <= 5
+      ) || (
+        request.resource.data.dailyDateKey != resource.data.dailyDateKey
+        && request.resource.data.dailyBooksCount == 1
+      );
+    }
+
+    function matchingLogExists() {
+      let studentKey = myStudentKey();
+      let dateKey = request.resource.data.dailyDateKey;
+      let sequence = request.resource.data.dailyBooksCount;
+      let logId = studentKey + "__" + dateKey + "__" + sequence;
+      let log = getAfter(/databases/$(database)/documents/bookLogs/$(logId)).data;
+      return log.studentKey == studentKey
+        && log.classId == profile().classId
+        && log.studentId == profile().studentId
+        && log.submissionDateKey == dateKey
+        && log.dailySequence == sequence
+        && log.distanceAwarded == request.resource.data.distance - resource.data.distance;
+    }
+
     function validReadingIncrement() {
       return request.resource.data.booksCount == resource.data.booksCount + 1
         && request.resource.data.distance >= resource.data.distance + 10
         && request.resource.data.distance <= resource.data.distance + 120
         && request.resource.data.dailyBooksCount is int
-        && request.resource.data.dailyBooksCount >= 1
-        && request.resource.data.dailyBooksCount <= 5
         && request.resource.data.dailyDateKey is string
         && request.resource.data.dailyDateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && validDailyCounter()
+        && matchingLogExists()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           "classId", "studentId", "booksCount", "distance", "lastBook",
           "lastAuthor", "dailyDateKey", "dailyBooksCount", "updatedAt"
@@ -90,8 +115,11 @@ service cloud.firestore {
         && data.distance == privateData.distance;
     }
 
-    function validBookLog(data) {
+    function validBookLog(data, logId) {
+      let expectedId = data.studentKey + "__" + data.submissionDateKey + "__" + data.dailySequence;
+      let studentAfter = getAfter(/databases/$(database)/documents/students/$(data.studentKey)).data;
       return isStudent()
+        && logId == expectedId
         && data.studentKey == myStudentKey()
         && data.classId == profile().classId
         && data.studentId == profile().studentId
@@ -108,7 +136,9 @@ service cloud.firestore {
         && data.submissionDateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && data.dailySequence is int
         && data.dailySequence >= 1
-        && data.dailySequence <= 5;
+        && data.dailySequence <= 5
+        && studentAfter.dailyDateKey == data.submissionDateKey
+        && studentAfter.dailyBooksCount == data.dailySequence;
     }
 
     function validRecommendation(data, dateKey) {
@@ -150,7 +180,7 @@ service cloud.firestore {
     match /bookLogs/{logId} {
       allow read: if isTeacher()
         || (isStudent() && resource.data.studentKey == myStudentKey());
-      allow create: if validBookLog(request.resource.data);
+      allow create: if validBookLog(request.resource.data, logId);
       allow update, delete: if false;
     }
 
