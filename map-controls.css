@@ -118,40 +118,72 @@ body.map-expanded {
 }
 
 @media (max-width: 760px) {
+  .track-shell {
+    overflow: hidden;
+  }
+
+  .track-canvas {
+    z-index: 1;
+  }
+
+  .map-control-bar {
+    z-index: 60 !important;
+    top: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px !important;
+    max-width: none !important;
+    pointer-events: auto !important;
+  }
+
+  .map-control-button {
+    width: 100%;
+    min-height: 38px !important;
+    border-radius: 14px !important;
+    padding: 0 8px !important;
+    background: rgba(255,255,255,.96) !important;
+    font-size: 11px !important;
+    line-height: 1.15;
+    white-space: normal;
+    pointer-events: auto !important;
+  }
+
   .track-shell.is-map-expanded .map-control-bar {
-    top: 74px;
-    right: 10px;
-    left: 10px;
-    max-width: none;
-    justify-content: center;
+    top: calc(62px + env(safe-area-inset-top)) !important;
+    left: 10px !important;
+    right: 10px !important;
+    max-width: none !important;
   }
 
   .map-exit-button {
-    top: 12px;
-    left: 12px;
+    z-index: 70 !important;
+    top: calc(10px + env(safe-area-inset-top)) !important;
+    left: 10px !important;
     min-height: 42px;
     padding-inline: 15px;
     font-size: 13px;
   }
+
+  .map-view-hint {
+    z-index: 50 !important;
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    max-width: none !important;
+    padding: 8px 10px !important;
+    font-size: 10.5px !important;
+  }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 430px) {
   .map-control-bar {
-    top: 10px;
-    right: 10px;
-    gap: 6px;
-    max-width: calc(100% - 20px);
+    grid-template-columns: 1fr 1fr;
   }
 
   .map-control-button {
-    min-height: 36px;
-    padding-inline: 10px;
-    font-size: 11px;
-  }
-
-  .map-view-hint {
-    left: 10px;
-    bottom: 10px;
-    max-width: calc(100% - 20px);
+    min-height: 36px !important;
+    font-size: 10px !important;
   }
 }
