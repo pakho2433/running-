@@ -1,6 +1,6 @@
-import { getApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js?history-secure=1";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?history-secure=1";
-import { collection, getDocs, getFirestore, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js?history-secure=1";
+import { getApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js?secure-data=1";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
+import { collection, getDocs, getFirestore, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js?secure-data=1";
 
 const SESSION_KEY = "reading-run-session-v1";
 const button = document.querySelector("#readingBuddyButton");
