@@ -14,6 +14,10 @@ const state = {
 
 const DEFAULT_POSITION = new Vector3(0, 24, 42);
 const DEFAULT_TARGET = new Vector3(0, 1.5, -40);
+const MOBILE_POSITION = new Vector3(0, 42, 86);
+const MOBILE_TARGET = new Vector3(0, 1.8, -44);
+const TABLET_POSITION = new Vector3(0, 34, 68);
+const TABLET_TARGET = new Vector3(0, 1.8, -42);
 const tempPosition = new Vector3();
 const tempTarget = new Vector3();
 const tempDirection = new Vector3();
@@ -32,6 +36,15 @@ if (shell && canvasHost && expandButton && exitButton && firstPersonButton && or
   bindPointerControls();
   updateControls();
   requestAnimationFrame(updateCameraLoop);
+  window.addEventListener("resize", () => {
+    resetToOverview();
+    resizeRenderer();
+  });
+  window.addEventListener("orientationchange", () => {
+    resetToOverview();
+    setTimeout(resizeRenderer, 120);
+    setTimeout(resizeRenderer, 420);
+  });
 }
 
 function bindButtons() {
@@ -53,18 +66,13 @@ function bindButtons() {
   orbitButton.addEventListener("click", () => {
     state.mode = state.mode === "orbit" ? "overview" : "orbit";
     state.yaw = 0;
-    state.pitch = -0.2;
-    state.orbitDistance = 58;
+    state.pitch = -0.28;
+    state.orbitDistance = getDefaultOrbitDistance();
     updateControls();
   });
 
   resetButton.addEventListener("click", () => {
-    state.mode = "overview";
-    state.yaw = 0;
-    state.pitch = -0.2;
-    state.orbitDistance = 58;
-    restoreRunner();
-    updateControls();
+    resetToOverview();
   });
 
   document.addEventListener("keydown", (event) => {
@@ -74,12 +82,37 @@ function bindButtons() {
   });
 }
 
+function resetToOverview() {
+  state.mode = "overview";
+  state.yaw = 0;
+  state.pitch = -0.2;
+  state.orbitDistance = getDefaultOrbitDistance();
+  restoreRunner();
+  updateControls();
+}
+
+function getViewportKind() {
+  const width = window.innerWidth || document.documentElement.clientWidth || 1024;
+  const height = window.innerHeight || document.documentElement.clientHeight || 768;
+  if (width <= 760 || width < height * 0.82) return "mobile";
+  if (width <= 1100) return "tablet";
+  return "desktop";
+}
+
+function getDefaultOrbitDistance() {
+  const viewport = getViewportKind();
+  if (viewport === "mobile") return 92;
+  if (viewport === "tablet") return 76;
+  return 58;
+}
+
 function setExpanded(expanded) {
   shell.classList.toggle("is-map-expanded", expanded);
   document.body.classList.toggle("map-expanded", expanded);
   expandButton.textContent = expanded ? "↙ 縮小地圖" : "⛶ 放大地圖";
   expandButton.setAttribute("aria-pressed", String(expanded));
   exitButton.setAttribute("aria-hidden", String(!expanded));
+  resetToOverview();
   setTimeout(resizeRenderer, 80);
   setTimeout(resizeRenderer, 260);
 }
@@ -105,7 +138,7 @@ function bindPointerControls() {
       const distance = pointerDistance();
       if (state.lastPinchDistance && distance > 0) {
         const ratio = state.lastPinchDistance / distance;
-        state.orbitDistance = MathUtils.clamp(state.orbitDistance * ratio, 12, 115);
+        state.orbitDistance = MathUtils.clamp(state.orbitDistance * ratio, 18, 140);
       }
       state.lastPinchDistance = distance;
     } else {
@@ -133,7 +166,7 @@ function bindPointerControls() {
 
   canvasHost.addEventListener("wheel", (event) => {
     if (state.mode === "overview") return;
-    state.orbitDistance = MathUtils.clamp(state.orbitDistance + event.deltaY * 0.045, 12, 115);
+    state.orbitDistance = MathUtils.clamp(state.orbitDistance + event.deltaY * 0.045, 18, 140);
     event.preventDefault();
   }, { passive: false });
 }
@@ -154,10 +187,21 @@ function updateCameraLoop() {
 function applyCamera(camera, scene) {
   if (state.mode === "overview") {
     restoreRunner();
-    camera.position.copy(DEFAULT_POSITION);
+    const viewport = getViewportKind();
+    if (viewport === "mobile") {
+      camera.position.copy(MOBILE_POSITION);
+      camera.lookAt(MOBILE_TARGET);
+      camera.fov = 62;
+    } else if (viewport === "tablet") {
+      camera.position.copy(TABLET_POSITION);
+      camera.lookAt(TABLET_TARGET);
+      camera.fov = 54;
+    } else {
+      camera.position.copy(DEFAULT_POSITION);
+      camera.lookAt(DEFAULT_TARGET);
+      camera.fov = 46;
+    }
     camera.up.set(0, 1, 0);
-    camera.lookAt(DEFAULT_TARGET);
-    camera.fov = 46;
     camera.updateProjectionMatrix();
     return;
   }
@@ -203,7 +247,7 @@ function applyCamera(camera, scene) {
   );
   camera.up.set(0, 1, 0);
   camera.lookAt(tempTarget);
-  camera.fov = 52;
+  camera.fov = getViewportKind() === "mobile" ? 60 : 52;
   camera.updateProjectionMatrix();
 }
 
@@ -238,11 +282,11 @@ function updateControls() {
   canvasHost.classList.toggle("is-interactive", state.mode !== "overview");
 
   if (state.mode === "first") {
-    hint.textContent = "第一身視角：在地圖拖曳可上下左右觀看；再次按按鈕可返回全景。";
+    hint.textContent = "第一身視角：在地圖拖曳可上下左右觀看；按「重設視角」返回全景。";
   } else if (state.mode === "orbit") {
-    hint.textContent = "360° 自由觀看：拖曳旋轉；滑鼠滾輪或雙指可縮放；按重設返回原位。";
+    hint.textContent = "360° 自由觀看：拖曳旋轉；雙指可縮放；按「重設視角」返回全景。";
   } else {
-    hint.textContent = "按「第一身」跟隨自己；按「360°」後拖曳旋轉，滾輪或雙指縮放。";
+    hint.textContent = "按「放大地圖」看全屏；按「第一身」或「360°」可轉換視角。";
   }
 }
 
