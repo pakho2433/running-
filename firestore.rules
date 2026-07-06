@@ -41,6 +41,7 @@ service cloud.firestore {
             && data.dailyBooksCount >= 0
             && data.dailyBooksCount <= 5))
         && (!('dailyDateKey' in data)
+          || data.dailyDateKey == ""
           || (data.dailyDateKey is string
             && data.dailyDateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')));
     }
@@ -61,6 +62,9 @@ service cloud.firestore {
 
     function validDailyCounter() {
       return (
+        (!('dailyDateKey' in resource.data) || !('dailyBooksCount' in resource.data))
+        && request.resource.data.dailyBooksCount == 1
+      ) || (
         request.resource.data.dailyDateKey == resource.data.dailyDateKey
         && request.resource.data.dailyBooksCount == resource.data.dailyBooksCount + 1
         && request.resource.data.dailyBooksCount <= 5
@@ -70,18 +74,25 @@ service cloud.firestore {
       );
     }
 
-    function matchingLogExists() {
-      let studentKey = myStudentKey();
-      let dateKey = request.resource.data.dailyDateKey;
-      let sequence = request.resource.data.dailyBooksCount;
-      let logId = studentKey + "__" + dateKey + "__" + sequence;
+    function logMatches(logId, sequence) {
       let log = getAfter(/databases/$(database)/documents/bookLogs/$(logId)).data;
-      return log.studentKey == studentKey
+      return log.studentKey == myStudentKey()
         && log.classId == profile().classId
         && log.studentId == profile().studentId
-        && log.submissionDateKey == dateKey
+        && log.submissionDateKey == request.resource.data.dailyDateKey
         && log.dailySequence == sequence
         && log.distanceAwarded == request.resource.data.distance - resource.data.distance;
+    }
+
+    function matchingLogExists() {
+      let key = myStudentKey();
+      let date = request.resource.data.dailyDateKey;
+      let sequence = request.resource.data.dailyBooksCount;
+      return (sequence == 1 && logMatches(key + "__" + date + "__1", 1))
+        || (sequence == 2 && logMatches(key + "__" + date + "__2", 2))
+        || (sequence == 3 && logMatches(key + "__" + date + "__3", 3))
+        || (sequence == 4 && logMatches(key + "__" + date + "__4", 4))
+        || (sequence == 5 && logMatches(key + "__" + date + "__5", 5));
     }
 
     function validReadingIncrement() {
@@ -115,11 +126,18 @@ service cloud.firestore {
         && data.distance == privateData.distance;
     }
 
+    function deterministicLogId(data, logId) {
+      return (data.dailySequence == 1 && logId == data.studentKey + "__" + data.submissionDateKey + "__1")
+        || (data.dailySequence == 2 && logId == data.studentKey + "__" + data.submissionDateKey + "__2")
+        || (data.dailySequence == 3 && logId == data.studentKey + "__" + data.submissionDateKey + "__3")
+        || (data.dailySequence == 4 && logId == data.studentKey + "__" + data.submissionDateKey + "__4")
+        || (data.dailySequence == 5 && logId == data.studentKey + "__" + data.submissionDateKey + "__5");
+    }
+
     function validBookLog(data, logId) {
-      let expectedId = data.studentKey + "__" + data.submissionDateKey + "__" + data.dailySequence;
       let studentAfter = getAfter(/databases/$(database)/documents/students/$(data.studentKey)).data;
       return isStudent()
-        && logId == expectedId
+        && deterministicLogId(data, logId)
         && data.studentKey == myStudentKey()
         && data.classId == profile().classId
         && data.studentId == profile().studentId
