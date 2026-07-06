@@ -118,72 +118,150 @@ body.map-expanded {
 }
 
 @media (max-width: 760px) {
-  .track-shell {
-    overflow: hidden;
+  .track-shell.is-map-expanded .map-control-bar {
+    top: 74px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    justify-content: center;
   }
 
-  .track-canvas {
-    z-index: 1;
+  .map-exit-button {
+    top: 12px;
+    left: 12px;
+    min-height: 42px;
+    padding-inline: 15px;
+    font-size: 13px;
   }
+}
 
+@media (max-width: 620px) {
   .map-control-bar {
+    top: 10px;
+    right: 10px;
+    gap: 6px;
+    max-width: calc(100% - 20px);
+  }
+
+  .map-control-button {
+    min-height: 36px;
+    padding-inline: 10px;
+    font-size: 11px;
+  }
+
+  .map-view-hint {
+    left: 10px;
+    bottom: 10px;
+    max-width: calc(100% - 20px);
+  }
+}
+
+/* High-priority mobile override: fixes the tall untappable map shown on phones. */
+@media (max-width: 820px) {
+  body .track-section {
+    overflow: visible !important;
+  }
+
+  body .track-range-bar {
+    margin-bottom: 8px !important;
+  }
+
+  body .track-shell {
+    position: relative !important;
+    width: 100% !important;
+    height: min(64dvh, 520px) !important;
+    min-height: 330px !important;
+    max-height: 520px !important;
+    aspect-ratio: auto !important;
+    overflow: hidden !important;
+    touch-action: pan-y !important;
+  }
+
+  body .track-canvas,
+  body .track-canvas canvas {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    display: block !important;
+    touch-action: manipulation !important;
+  }
+
+  body .map-control-bar {
+    position: absolute !important;
     z-index: 60 !important;
     top: 10px !important;
     left: 10px !important;
     right: 10px !important;
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    justify-content: stretch !important;
+    gap: 8px !important;
     max-width: none !important;
     pointer-events: auto !important;
   }
 
-  .map-control-button {
-    width: 100%;
+  body .map-control-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
     min-height: 38px !important;
-    border-radius: 14px !important;
     padding: 0 8px !important;
-    background: rgba(255,255,255,.96) !important;
+    border-radius: 12px !important;
+    white-space: normal !important;
+    line-height: 1.15 !important;
     font-size: 11px !important;
-    line-height: 1.15;
-    white-space: normal;
     pointer-events: auto !important;
   }
 
-  .track-shell.is-map-expanded .map-control-bar {
-    top: calc(62px + env(safe-area-inset-top)) !important;
-    left: 10px !important;
-    right: 10px !important;
-    max-width: none !important;
-  }
-
-  .map-exit-button {
-    z-index: 70 !important;
-    top: calc(10px + env(safe-area-inset-top)) !important;
-    left: 10px !important;
-    min-height: 42px;
-    padding-inline: 15px;
-    font-size: 13px;
-  }
-
-  .map-view-hint {
-    z-index: 50 !important;
+  body .map-view-hint {
+    z-index: 30 !important;
     left: 10px !important;
     right: 10px !important;
     bottom: 10px !important;
     max-width: none !important;
-    padding: 8px 10px !important;
-    font-size: 10.5px !important;
+    pointer-events: none !important;
+  }
+
+  body .track-empty {
+    z-index: 25 !important;
+    padding-top: 90px !important;
+    pointer-events: none !important;
   }
 }
 
 @media (max-width: 430px) {
-  .map-control-bar {
-    grid-template-columns: 1fr 1fr;
+  body .track-shell {
+    height: min(54dvh, 410px) !important;
+    min-height: 300px !important;
+    max-height: 410px !important;
   }
 
-  .map-control-button {
-    min-height: 36px !important;
+  body .map-control-bar {
+    top: 8px !important;
+    left: 8px !important;
+    right: 8px !important;
+    gap: 6px !important;
+  }
+
+  body .map-control-button {
+    min-height: 34px !important;
     font-size: 10px !important;
   }
+}
+
+body .track-shell.is-map-expanded {
+  height: 100dvh !important;
+  max-height: none !important;
+  min-height: 100dvh !important;
+  touch-action: none !important;
+}
+
+body .track-shell.is-map-expanded .track-canvas,
+body .track-shell.is-map-expanded .track-canvas canvas {
+  touch-action: none !important;
 }
