@@ -1,0 +1,107 @@
+/* Mobile map visibility fix
+   Keeps the 3D map usable on narrow phone screens and prevents the canvas from becoming an oversized, untappable panel. */
+
+@media (max-width: 760px) {
+  .track-section {
+    overflow: visible !important;
+  }
+
+  .track-range-bar {
+    position: sticky;
+    top: 78px;
+    z-index: 15;
+    margin-bottom: 8px !important;
+  }
+
+  .track-shell {
+    height: min(58dvh, 430px) !important;
+    min-height: 300px !important;
+    max-height: 430px !important;
+    aspect-ratio: auto !important;
+    overflow: hidden !important;
+    touch-action: pan-y !important;
+  }
+
+  .track-canvas,
+  .track-canvas canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 430px !important;
+    touch-action: manipulation !important;
+  }
+
+  .map-control-bar {
+    position: absolute !important;
+    z-index: 30 !important;
+    top: 8px !important;
+    left: 8px !important;
+    right: 8px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px !important;
+    pointer-events: auto !important;
+  }
+
+  .map-control-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    min-height: 36px !important;
+    padding: 0 6px !important;
+    border-radius: 12px !important;
+    white-space: normal !important;
+    line-height: 1.15 !important;
+    font-size: 10.5px !important;
+    pointer-events: auto !important;
+  }
+
+  .map-view-hint {
+    z-index: 24 !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 8px !important;
+    max-width: none !important;
+    padding: 7px 9px !important;
+    font-size: 10px !important;
+  }
+
+  .track-empty {
+    z-index: 18 !important;
+    padding-top: 78px !important;
+  }
+
+  .track-shell.is-map-expanded {
+    height: 100dvh !important;
+    max-height: none !important;
+  }
+
+  .track-shell.is-map-expanded .map-control-bar {
+    top: 64px !important;
+    left: 10px !important;
+    right: 10px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  .track-shell {
+    height: min(52dvh, 380px) !important;
+    min-height: 280px !important;
+    max-height: 380px !important;
+  }
+
+  .track-canvas,
+  .track-canvas canvas {
+    max-height: 380px !important;
+  }
+
+  .map-control-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .map-control-button {
+    min-height: 34px !important;
+    font-size: 10px !important;
+  }
+}
