@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js?secure-data=1";
-import { browserLocalPersistence, getAuth, setPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
+import { browserSessionPersistence, getAuth, setPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
 import { collection, doc, getDoc, getFirestore, increment, onSnapshot, query, runTransaction, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js?secure-data=1";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check.js?secure-data=1";
 import { APP_CONFIG } from "./app-config.js";
@@ -26,7 +26,7 @@ export async function initialiseSecurity() {
       console.warn("App Check was not started", error);
     }
   }
-  await setPersistence(auth, browserLocalPersistence);
+  await setPersistence(auth, browserSessionPersistence);
   if (typeof auth.authStateReady === "function") await auth.authStateReady();
 }
 
@@ -44,7 +44,12 @@ export async function restoreStudent() {
 async function authoriseStudent(uid, classId, studentId) {
   const snapshot = await getDoc(doc(db, "users", uid));
   const profile = snapshot.data() || {};
-  if (profile.role !== "student" || profile.classId !== classId || String(profile.studentId || "").toUpperCase() !== studentId) {
+  if (
+    profile.role !== "student"
+    || profile.active === false
+    || profile.classId !== classId
+    || String(profile.studentId || "").toUpperCase() !== studentId
+  ) {
     await signOut(auth).catch(() => {});
     throw new Error("PROFILE_MISMATCH");
   }
