@@ -24,10 +24,14 @@ jobs:
 
       - name: Check JavaScript syntax
         run: |
+          node --check app-stage.js
+          node --check country-scenes.js
+          node --check reading-history.js
           node --check secure-data-service.js
           node --check secure-ui-app.js
           node --check secure-track.js
           node --check teacher-center-secure.js
+          node --check teacher-app-check-watcher.js
           node --check daily-book-recommendation-secure.js
           node --check reading-history-secure.js
           node --check country-scenes-secure.js
