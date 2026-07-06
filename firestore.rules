@@ -5,56 +5,164 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function validStudent() {
-      return request.resource.data.classId is string
-        && request.resource.data.studentId is string
-        && request.resource.data.studentId.size() >= 1
-        && request.resource.data.studentId.size() <= 20
-        && request.resource.data.booksCount is int
-        && request.resource.data.booksCount >= 0
-        && request.resource.data.distance is number
-        && request.resource.data.distance >= 0
-        && (!('dailyBooksCount' in request.resource.data)
-          || (request.resource.data.dailyBooksCount is int
-            && request.resource.data.dailyBooksCount >= 0
-            && request.resource.data.dailyBooksCount <= 5))
-        && (!('dailyDateKey' in request.resource.data)
-          || request.resource.data.dailyDateKey is string);
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    function validRecommendation() {
-      return request.resource.data.dateKey is string
-        && request.resource.data.dateKey.size() == 10
-        && request.resource.data.title is string
-        && request.resource.data.title.size() >= 1
-        && request.resource.data.title.size() <= 120
-        && request.resource.data.author is string
-        && request.resource.data.author.size() >= 1
-        && request.resource.data.author.size() <= 120
-        && request.resource.data.coverUrl is string
-        && request.resource.data.coverUrl.size() <= 500
-        && request.resource.data.platformUrl is string
-        && request.resource.data.platformUrl.size() >= 8
-        && request.resource.data.platformUrl.size() <= 500;
+    function isTeacher() {
+      return signedIn() && profile().role == "teacher";
+    }
+
+    function isStudent() {
+      return signedIn()
+        && profile().role == "student"
+        && profile().classId is string
+        && profile().studentId is string;
+    }
+
+    function myStudentKey() {
+      return profile().classId + "__" + profile().studentId;
+    }
+
+    function validStudentIdentity(data, studentKey) {
+      return isStudent()
+        && studentKey == myStudentKey()
+        && data.classId == profile().classId
+        && data.studentId == profile().studentId;
+    }
+
+    function validStudentNumbers(data) {
+      return data.booksCount is int
+        && data.booksCount >= 0
+        && data.distance is number
+        && data.distance >= 0
+        && (!('dailyBooksCount' in data)
+          || (data.dailyBooksCount is int
+            && data.dailyBooksCount >= 0
+            && data.dailyBooksCount <= 5))
+        && (!('dailyDateKey' in data)
+          || (data.dailyDateKey is string
+            && data.dailyDateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')));
+    }
+
+    function validStudentCreate(data, studentKey) {
+      return validStudentIdentity(data, studentKey)
+        && validStudentNumbers(data)
+        && data.booksCount == 0
+        && data.distance == 0;
+    }
+
+    function identityRefreshOnly() {
+      return request.resource.data.booksCount == resource.data.booksCount
+        && request.resource.data.distance == resource.data.distance
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(["classId", "studentId", "updatedAt"]);
+    }
+
+    function validReadingIncrement() {
+      return request.resource.data.booksCount == resource.data.booksCount + 1
+        && request.resource.data.distance >= resource.data.distance + 10
+        && request.resource.data.distance <= resource.data.distance + 120
+        && request.resource.data.dailyBooksCount is int
+        && request.resource.data.dailyBooksCount >= 1
+        && request.resource.data.dailyBooksCount <= 5
+        && request.resource.data.dailyDateKey is string
+        && request.resource.data.dailyDateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "classId", "studentId", "booksCount", "distance", "lastBook",
+          "lastAuthor", "dailyDateKey", "dailyBooksCount", "updatedAt"
+        ]);
+    }
+
+    function validStudentUpdate(studentKey) {
+      return validStudentIdentity(request.resource.data, studentKey)
+        && validStudentNumbers(request.resource.data)
+        && request.resource.data.classId == resource.data.classId
+        && request.resource.data.studentId == resource.data.studentId
+        && (identityRefreshOnly() || validReadingIncrement());
+    }
+
+    function validPublicStudent(data, studentKey) {
+      let privateData = getAfter(/databases/$(database)/documents/students/$(studentKey)).data;
+      return validStudentIdentity(data, studentKey)
+        && data.keys().hasOnly(["classId", "studentId", "booksCount", "distance", "updatedAt"])
+        && data.booksCount == privateData.booksCount
+        && data.distance == privateData.distance;
+    }
+
+    function validBookLog(data) {
+      return isStudent()
+        && data.studentKey == myStudentKey()
+        && data.classId == profile().classId
+        && data.studentId == profile().studentId
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 80
+        && data.author is string
+        && data.author.size() >= 1
+        && data.author.size() <= 80
+        && data.distanceAwarded is int
+        && data.distanceAwarded >= 10
+        && data.distanceAwarded <= 120
+        && data.submissionDateKey is string
+        && data.submissionDateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data.dailySequence is int
+        && data.dailySequence >= 1
+        && data.dailySequence <= 5;
+    }
+
+    function validRecommendation(data, dateKey) {
+      return data.dateKey == dateKey
+        && data.dateKey is string
+        && data.dateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 120
+        && data.author is string
+        && data.author.size() >= 1
+        && data.author.size() <= 120
+        && data.coverUrl is string
+        && data.coverUrl.size() <= 500
+        && data.platformUrl is string
+        && data.platformUrl.matches('^https://.*')
+        && data.platformUrl.size() <= 500;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isTeacher());
+      allow create, update, delete: if false;
     }
 
     match /students/{studentKey} {
-      allow read: if signedIn();
-      allow create, update: if signedIn() && validStudent();
+      allow read: if isTeacher() || (isStudent() && studentKey == myStudentKey());
+      allow create: if validStudentCreate(request.resource.data, studentKey);
+      allow update: if isTeacher() || validStudentUpdate(studentKey);
+      allow delete: if false;
+    }
+
+    match /publicStudents/{studentKey} {
+      allow read: if isTeacher()
+        || (isStudent() && resource.data.classId == profile().classId);
+      allow create, update: if validPublicStudent(request.resource.data, studentKey);
       allow delete: if false;
     }
 
     match /bookLogs/{logId} {
-      allow read, create: if signedIn();
+      allow read: if isTeacher()
+        || (isStudent() && resource.data.studentKey == myStudentKey());
+      allow create: if validBookLog(request.resource.data);
       allow update, delete: if false;
     }
 
     match /dailyRecommendations/{dateKey} {
       allow read: if signedIn();
-      allow create, update: if signedIn()
-        && request.resource.data.dateKey == dateKey
-        && validRecommendation();
-      allow delete: if signedIn();
+      allow create, update: if isTeacher()
+        && validRecommendation(request.resource.data, dateKey);
+      allow delete: if isTeacher();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
