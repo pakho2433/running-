@@ -258,54 +258,363 @@
   font-weight: 800;
 }
 
-body.history-open {
-  overflow: hidden;
+/* Responsive layout patch: keeps the app proportional on phone, tablet, and desktop. */
+html {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
-@media (max-width: 1200px) {
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+canvas,
+svg,
+video {
+  max-width: 100%;
+}
+
+.app-shell,
+.main-layout,
+.sidebar,
+.content-area,
+.overview-section,
+.track-section,
+.location-panel,
+.track-shell,
+.history-dialog {
+  max-width: 100%;
+}
+
+.main-layout {
+  grid-template-columns: minmax(270px, 340px) minmax(0, 1fr) !important;
+  gap: clamp(14px, 2vw, 24px) !important;
+  padding: clamp(14px, 3vw, 28px) clamp(12px, 4vw, 54px) max(28px, env(safe-area-inset-bottom)) !important;
+}
+
+.topbar {
+  gap: clamp(10px, 2vw, 20px) !important;
+  padding-inline: clamp(12px, 4vw, 54px) !important;
+}
+
+.topbar > div:first-child {
+  min-width: 0;
+}
+
+.topbar h1,
+.section-heading h2,
+.location-panel-heading h3,
+.leaderboard-heading h3 {
+  overflow-wrap: anywhere;
+}
+
+.track-shell {
+  min-height: clamp(340px, 56vh, 620px) !important;
+  aspect-ratio: 16 / 10;
+}
+
+.location-buttons {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+}
+
+.country-location-card {
+  min-height: auto !important;
+}
+
+.runner-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)) !important;
+}
+
+@media (max-width: 1100px) {
+  .main-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar {
+    position: static !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .student-panel,
+  .book-form,
+  .book-mascot-panel {
+    grid-column: 1 / -1 !important;
+  }
+
   .location-buttons {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .track-shell {
+    min-height: clamp(380px, 52vh, 560px) !important;
+    aspect-ratio: 4 / 3;
   }
 }
 
 @media (max-width: 760px) {
+  .login-screen {
+    min-height: 100dvh;
+    padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .login-card {
+    width: 100% !important;
+    border-radius: 22px !important;
+    padding: 24px 18px !important;
+  }
+
+  .brand-mark {
+    width: 62px !important;
+    height: 62px !important;
+    margin-bottom: 18px !important;
+    border-radius: 20px !important;
+    font-size: 28px !important;
+  }
+
+  .topbar {
+    position: sticky;
+    align-items: stretch !important;
+    flex-direction: column !important;
+    padding-block: 12px !important;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    align-items: stretch !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  .sync-status {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ghost-button {
+    flex: 0 0 auto;
+  }
+
+  .main-layout {
+    padding-inline: 10px !important;
+    padding-top: 12px !important;
+  }
+
+  .sidebar {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .student-panel,
+  .book-form,
+  .my-progress-card,
+  .recent-book-card,
+  .overview-section,
+  .track-section,
+  .leaderboard-section,
+  .location-panel,
+  .book-mascot-panel {
+    border-radius: 18px !important;
+  }
+
+  .student-panel,
+  .book-form,
+  .recent-book-card,
+  .leaderboard-section,
+  .location-panel {
+    padding: 14px !important;
+  }
+
+  .overview-section,
+  .track-section {
+    padding: 14px !important;
+  }
+
+  .section-heading,
+  .track-heading,
+  .location-panel-heading,
+  .leaderboard-heading,
+  .history-record-heading,
+  .history-summary-bar {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .section-heading > p {
+    max-width: none !important;
+    text-align: left !important;
+  }
+
+  .classroom-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .classroom-card {
+    min-height: 112px !important;
+    padding: 13px !important;
+  }
+
   .location-buttons {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px !important;
   }
 
-  .country-location-card {
-    min-height: 215px !important;
+  .country-scene-image {
+    aspect-ratio: 4 / 3;
   }
 
-  .history-dialog-header,
-  .history-summary-bar,
+  .track-range-bar {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .track-shell {
+    min-height: clamp(320px, 54vh, 460px) !important;
+    aspect-ratio: 3 / 4;
+    border-radius: 18px !important;
+  }
+
+  .map-control-bar {
+    left: 8px !important;
+    right: 8px !important;
+    justify-content: center !important;
+    max-width: none !important;
+  }
+
+  .map-control-button {
+    min-height: 34px !important;
+    padding-inline: 9px !important;
+    font-size: 10.5px !important;
+  }
+
+  .map-view-hint {
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 8px !important;
+    max-width: none !important;
+  }
+
+  .leaderboard-item {
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+  }
+
+  .leaderboard-distance {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .book-mascot-panel {
+    min-height: 260px !important;
+  }
+
+  .book-character {
+    transform: scale(.86);
+  }
+
+  .history-modal {
+    align-items: end !important;
+    padding: 10px !important;
+  }
+
+  .history-dialog {
+    width: 100% !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 22px !important;
+  }
+
+  .history-dialog-header {
+    padding: 18px 16px 12px !important;
+  }
+
   .history-list {
-    padding-left: 16px;
-    padding-right: 16px;
+    max-height: calc(100dvh - 190px) !important;
+    padding: 14px 16px 18px !important;
   }
 
-  .history-summary-bar {
-    align-items: flex-start;
-    flex-direction: column;
+  .history-record {
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 12px !important;
+  }
+
+  .history-record-number {
+    width: 32px !important;
+    height: 32px !important;
   }
 }
 
-@media (max-width: 440px) {
+@media (max-width: 430px) {
+  .topbar-actions {
+    flex-direction: column !important;
+  }
+
+  .primary-button,
+  .ghost-button,
+  input,
+  select {
+    min-height: 44px !important;
+  }
+
+  .book-form-heading {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .my-progress-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .my-progress-card > div + div {
+    border-left: 0 !important;
+    border-top: 1px solid var(--line) !important;
+  }
+
+  .classroom-grid,
   .location-buttons {
     grid-template-columns: 1fr !important;
   }
 
-  .history-record {
-    grid-template-columns: 34px minmax(0, 1fr);
-    padding: 11px;
+  .classroom-card,
+  .country-location-card {
+    min-height: auto !important;
   }
 
-  .history-record-number {
-    width: 32px;
-    height: 32px;
+  .track-stats {
+    justify-content: flex-start !important;
   }
 
-  .history-record-heading {
-    flex-direction: column;
+  .track-stats span {
+    width: 100%;
+  }
+
+  .track-shell {
+    min-height: clamp(300px, 58vh, 420px) !important;
+  }
+
+  .reading-buddy-button {
+    left: 10px !important;
+    right: 10px !important;
+    justify-content: center !important;
+    padding-inline: 10px !important;
+  }
+
+  .reading-buddy-button small {
+    display: none;
+  }
+}
+
+@media (min-width: 1400px) {
+  .track-shell {
+    min-height: clamp(560px, 58vh, 760px) !important;
   }
 }
