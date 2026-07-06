@@ -1,0 +1,11 @@
+{
+  "name": "reading-run-admin-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "provision": "node provision-users.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.4.0"
+  }
+}
