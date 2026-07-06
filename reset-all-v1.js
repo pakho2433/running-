@@ -2,6 +2,20 @@
   const RESET_ID = "2026-07-03-full-reset-1";
   const MARKER_KEY = "reading-run-reset-id";
 
+  const MOBILE_FIX_ID = "reading-run-mobile-map-fix";
+  if (!document.getElementById(MOBILE_FIX_ID)) {
+    const link = document.createElement("link");
+    link.id = MOBILE_FIX_ID;
+    link.rel = "stylesheet";
+    link.href = "./mobile-map-fix.css?v=20260706-mobile-map-fix-1";
+    document.head.appendChild(link);
+  }
+
+  window.addEventListener("load", () => {
+    setTimeout(() => window.dispatchEvent(new Event("resize")), 250);
+    setTimeout(() => window.dispatchEvent(new Event("resize")), 1000);
+  });
+
   if (localStorage.getItem(MARKER_KEY) === RESET_ID) return;
 
   [
