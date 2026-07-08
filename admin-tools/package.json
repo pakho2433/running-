@@ -1,0 +1,11 @@
+{
+  "name": "reading-run-admin-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "import-users": "node import-users-from-csv.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.4.0"
+  }
+}
