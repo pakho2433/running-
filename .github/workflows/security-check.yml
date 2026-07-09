@@ -28,6 +28,7 @@ jobs:
           node --check country-scenes.js
           node --check reading-history.js
           node --check secure-data-service.js
+          node --check secure-google-ui-app.js
           node --check secure-ui-app.js
           node --check secure-track.js
           node --check teacher-center-secure.js
