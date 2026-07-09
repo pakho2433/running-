@@ -3,7 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "generate-users": "node generate-student-users.mjs",
     "import-users": "node import-users-from-csv.mjs"
   },
   "dependencies": {
