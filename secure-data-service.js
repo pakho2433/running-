@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { browserSessionPersistence, fetchSignInMethodsForEmail, getAuth, setPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { collection, doc, getDoc, getFirestore, increment, onSnapshot, query, runTransaction, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { browserSessionPersistence, fetchSignInMethodsForEmail, getAuth, getIdTokenResult, setPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { collection, doc, getDoc, getDocs, getFirestore, increment, onSnapshot, query, runTransaction, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check.js";
 import { APP_CONFIG } from "./app-config.js";
 import { firebaseConfig } from "./firebase-config-v3.js";
@@ -46,6 +46,20 @@ export async function loginStudent(classId, studentId, password) {
   return authoriseStudent(credential.user.uid, safeClassId, safeStudentId);
 }
 
+export async function loginTeacher(email, password) {
+  const safeEmail = String(email || "").trim().toLowerCase();
+  const safePassword = String(password || "").trim();
+  if (!safeEmail || safePassword.length < 8) throw new Error("MISSING_TEACHER_LOGIN_FIELDS");
+  let credential;
+  try {
+    credential = await signInWithEmailAndPassword(auth, safeEmail, safePassword);
+  } catch (error) {
+    if (isWrongPasswordError(error)) throw new Error("PASSWORD_INCORRECT");
+    throw error;
+  }
+  return authoriseTeacher(credential.user);
+}
+
 async function ensureStudentAccountExists(email) {
   try {
     await fetchSignInMethodsForEmail(auth, email);
@@ -62,8 +76,16 @@ function isWrongPasswordError(error) {
 
 export async function restoreStudent() {
   const session = readSession();
+  if (session?.role && session.role !== "student") return null;
   if (!auth.currentUser || !session?.classId || !session?.studentId) return null;
   return authoriseStudent(auth.currentUser.uid, session.classId, session.studentId);
+}
+
+export async function restoreTeacher() {
+  const session = readSession();
+  if (session?.role !== "teacher") return null;
+  if (!auth.currentUser || session?.classId || session?.studentId) return null;
+  return authoriseTeacher(auth.currentUser);
 }
 
 async function authoriseStudent(uid, classId, studentId) {
@@ -78,10 +100,37 @@ async function authoriseStudent(uid, classId, studentId) {
     await signOut(auth).catch(() => {});
     throw new Error("PROFILE_MISMATCH");
   }
-  const user = { uid, classId, studentId, email: auth.currentUser?.email || "", key: `${classId}__${studentId}` };
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ classId, studentId }));
+  const user = { uid, role: "student", classId, studentId, email: auth.currentUser?.email || "", key: `${classId}__${studentId}` };
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ role: "student", classId, studentId }));
   await ensureStudent(user);
   return user;
+}
+
+async function authoriseTeacher(user) {
+  const token = await getIdTokenResult(user, true);
+  const profileSnapshot = await getDoc(doc(db, "users", user.uid));
+  const profile = profileSnapshot.data() || {};
+  if (
+    token.claims?.teacher !== true
+    || profile.role !== "teacher"
+    || profile.active === false
+  ) {
+    await signOut(auth).catch(() => {});
+    throw new Error("TEACHER_PROFILE_MISMATCH");
+  }
+  const teacher = {
+    uid: user.uid,
+    role: "teacher",
+    email: user.email || profile.email || "",
+    displayName: profile.displayName || profile.name || "教師",
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ role: "teacher" }));
+  return teacher;
+}
+
+async function ensureTeacher() {
+  if (!auth.currentUser) throw new Error("TEACHER_NOT_SIGNED_IN");
+  return authoriseTeacher(auth.currentUser);
 }
 
 async function ensureStudent(user) {
@@ -197,6 +246,22 @@ export async function saveReading(user, record) {
   });
 }
 
+export async function loadTeacherDashboardData(options = {}) {
+  const teacher = await ensureTeacher();
+  const includeLogs = options.includeLogs === true;
+  const [studentsSnapshot, logsSnapshot] = await Promise.all([
+    getDocs(collection(db, "students")),
+    includeLogs ? getDocs(collection(db, "bookLogs")) : Promise.resolve(null),
+  ]);
+  const students = studentsSnapshot.docs
+    .map((item) => normaliseStudentRecord(item.id, item.data()))
+    .sort(compareStudentRecords);
+  const logs = logsSnapshot ? logsSnapshot.docs
+    .map((item) => normaliseBookLog(item.id, item.data()))
+    .sort((a, b) => timeOf(b) - timeOf(a)) : [];
+  return { teacher, students, logs, logsLoaded: includeLogs, generatedAt: new Date().toISOString() };
+}
+
 export async function logoutStudent() {
   stopSubscriptions();
   localStorage.removeItem(SESSION_KEY);
@@ -210,6 +275,51 @@ export function scoreReading(record) {
 
 export function schoolDateKey() {
   return new Intl.DateTimeFormat("en-CA", { timeZone: APP_CONFIG.schoolTimeZone || "Asia/Hong_Kong", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+}
+
+function normaliseStudentRecord(id, data) {
+  return {
+    id,
+    classId: String(data.classId || ""),
+    studentId: String(data.studentId || ""),
+    booksCount: Number(data.booksCount || 0),
+    distance: Number(data.distance || 0),
+    lastBook: String(data.lastBook || ""),
+    lastAuthor: String(data.lastAuthor || ""),
+    dailyBooksCount: Number(data.dailyBooksCount || 0),
+    dailyDateKey: String(data.dailyDateKey || ""),
+    updatedAt: data.updatedAt || null,
+  };
+}
+
+function normaliseBookLog(id, data) {
+  return {
+    id,
+    classId: String(data.classId || ""),
+    studentId: String(data.studentId || ""),
+    studentKey: String(data.studentKey || ""),
+    readingDate: String(data.readingDate || ""),
+    title: String(data.title || ""),
+    author: String(data.author || ""),
+    readingType: String(data.readingType || ""),
+    subject: String(data.subject || ""),
+    completed: String(data.completed || ""),
+    distanceAwarded: Number(data.distanceAwarded || 0),
+    submissionDateKey: String(data.submissionDateKey || ""),
+    dailySequence: Number(data.dailySequence || 0),
+    clientCreatedAt: String(data.clientCreatedAt || ""),
+    createdAt: data.createdAt || null,
+  };
+}
+
+function compareStudentRecords(a, b) {
+  return a.classId.localeCompare(b.classId, "en", { numeric: true })
+    || a.studentId.localeCompare(b.studentId, "en", { numeric: true });
+}
+
+function timeOf(record) {
+  if (typeof record.createdAt?.toMillis === "function") return record.createdAt.toMillis();
+  return Date.parse(record.clientCreatedAt || record.submissionDateKey || record.readingDate || "") || 0;
 }
 
 function buildStudentEmail(classId, studentId) {
