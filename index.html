@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>閱讀跑道 Reading Run｜學生登入版</title>
+  <title>閱讀跑道 Reading Run｜學生及教師登入版</title>
   <link rel="stylesheet" href="./styles.css?v=20260709-student-only-1" />
   <link rel="stylesheet" href="./stage-fix.css?v=20260709-student-only-1" />
   <link rel="stylesheet" href="./colorful-theme.css?v=20260709-student-only-1" />
@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="./book-mascot.css?v=20260709-student-only-1" />
   <link rel="stylesheet" href="./country-history.css?v=20260709-student-only-1" />
   <link rel="stylesheet" href="./daily-book-recommendation.css?v=20260709-student-only-1" />
+  <link rel="stylesheet" href="./teacher-dashboard.css?v=20260709-teacher-1" />
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -22,15 +23,24 @@
       <div class="brand-mark" aria-hidden="true">🏃📚</div>
       <p class="eyebrow">READING RUN</p>
       <h1 id="loginTitle">登入閱讀跑道</h1>
-      <p class="login-intro">請選擇課室，輸入學生 ID 及登入密碼。</p>
+      <p class="login-intro">請選擇登入身份，輸入帳戶資料。</p>
       <form id="loginForm" class="login-form">
-        <label><span>課室</span><select id="loginClass" required><option value="C01">1A</option><option value="C02">1B</option><option value="C03">2A</option><option value="C04">2B</option><option value="C05">2C</option><option value="C06">3A</option><option value="C07">3B</option><option value="C08">3C</option><option value="C09">4A</option><option value="C10">4B</option><option value="C11">4C</option><option value="C12">5A</option><option value="C13">5B</option><option value="C14">5C</option><option value="C15">6A</option><option value="C16">6B</option><option value="C17">6C</option></select></label>
-        <label><span>學生 ID</span><input id="studentId" type="text" placeholder="例如：S0123" required /></label>
-        <label><span>登入密碼</span><input id="loginPassword" type="password" placeholder="最少 6 位" required /></label>
+        <div class="login-role-switch" role="radiogroup" aria-label="登入身份">
+          <label><input id="loginRoleStudent" type="radio" name="loginRole" value="student" checked /><span>學生</span></label>
+          <label><input id="loginRoleTeacher" type="radio" name="loginRole" value="teacher" /><span>教師</span></label>
+        </div>
+        <div id="studentLoginFields" class="login-field-group">
+          <label><span>課室</span><select id="loginClass" required><option value="C01">1A</option><option value="C02">1B</option><option value="C03">2A</option><option value="C04">2B</option><option value="C05">2C</option><option value="C06">3A</option><option value="C07">3B</option><option value="C08">3C</option><option value="C09">4A</option><option value="C10">4B</option><option value="C11">4C</option><option value="C12">5A</option><option value="C13">5B</option><option value="C14">5C</option><option value="C15">6A</option><option value="C16">6B</option><option value="C17">6C</option></select></label>
+          <label><span>學生 ID</span><input id="studentId" type="text" placeholder="例如：S0123" autocomplete="username" required /></label>
+        </div>
+        <div id="teacherLoginFields" class="login-field-group is-hidden">
+          <label><span>教師電郵</span><input id="teacherEmail" type="email" placeholder="teacher@example.com" autocomplete="username" disabled /></label>
+        </div>
+        <label><span>登入密碼</span><input id="loginPassword" type="password" placeholder="最少 6 位" autocomplete="current-password" required /></label>
         <button id="loginButton" class="primary-button" type="submit">安全登入</button>
       </form>
       <div id="loginMessage" class="form-message" role="status"></div>
-      <p class="privacy-note">此平台只提供學生登入，不設教師登入入口。</p>
+      <p class="privacy-note">請妥善保管登入資料；每次開啟或重新整理網頁後均須重新登入。</p>
     </section>
   </div>
 
@@ -66,8 +76,30 @@
     </main>
   </div>
 
+  <div id="teacherShell" class="teacher-shell is-hidden">
+    <header class="topbar">
+      <div><p class="eyebrow">TEACHER DASHBOARD</p><h1>全校閱讀數據</h1></div>
+      <div class="topbar-actions"><span id="teacherSyncStatus" class="sync-status" data-state="idle">● 等待登入</span><button id="teacherRefreshButton" class="ghost-button" type="button">重新整理</button><button id="teacherDownloadButton" class="primary-button" type="button">下載 Excel</button><button id="teacherLogoutButton" class="ghost-button" type="button">登出</button></div>
+    </header>
+    <main class="teacher-main">
+      <section class="teacher-profile-bar">
+        <div><p class="panel-label">教師帳戶</p><strong id="teacherNameLabel">—</strong><span id="teacherEmailLabel">—</span></div>
+        <p id="teacherStatus" class="teacher-status" role="status">教師平台已登入。</p>
+      </section>
+      <section id="teacherSummaryCards" class="teacher-metrics" aria-label="全校摘要"></section>
+      <section class="teacher-panel" aria-labelledby="teacherClassTitle">
+        <div class="section-heading"><div><p class="eyebrow">CLASS SUMMARY</p><h2 id="teacherClassTitle">班級統計</h2></div></div>
+        <div class="teacher-table-wrap"><table class="teacher-table"><thead><tr><th>課室</th><th>學生</th><th>有紀錄</th><th>書本</th><th>里數</th><th>紀錄</th></tr></thead><tbody id="teacherClassRows"></tbody></table></div>
+      </section>
+      <section class="teacher-panel" aria-labelledby="teacherStudentTitle">
+        <div class="section-heading"><div><p class="eyebrow">STUDENTS</p><h2 id="teacherStudentTitle">學生總覽</h2></div></div>
+        <div class="teacher-table-wrap"><table class="teacher-table"><thead><tr><th>課室</th><th>學生 ID</th><th>書本</th><th>里數</th><th>最近書本</th><th>今日</th><th>日期</th></tr></thead><tbody id="teacherStudentRows"></tbody></table></div>
+      </section>
+    </main>
+  </div>
+
   <div id="readingHistoryModal" class="history-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="readingHistoryTitle"><section class="history-dialog"><header class="history-dialog-header"><div><p class="eyebrow">READING BUDDY</p><h2 id="readingHistoryTitle">我的閱讀歷史</h2><p>只有本人可以查看。</p></div><button id="readingHistoryClose" class="history-close-button" type="button" aria-label="關閉閱讀歷史">✕</button></header><div class="history-summary-bar"><strong id="readingHistorySummary"></strong><span id="readingHistoryStatus" role="status">按 Reading Buddy 載入紀錄。</span></div><div id="readingHistoryList" class="history-list"></div></section></div>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <script src="./reset-all-v1.js?v=20260709-student-only-1"></script><script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js": "./three-reading-wrapper.js?v=20260709-student-only-1", "./app-config.js": "./app-config.js?v=20260709-student-only-1", "./firebase-config.js": "./firebase-config-v3.js?v=20260709-student-only-1" } }</script><script type="module" src="./map-controls.js?v=20260709-student-only-1"></script><script type="module" src="./app-stage.js?v=20260709-secure-login-3"></script><script type="module" src="./country-scenes.js?v=20260709-student-only-1"></script><script type="module" src="./reading-history.js?v=20260709-student-only-1"></script><script type="module" src="./daily-book-recommendation.js?v=20260709-secure-login-2"></script>
+  <script src="./reset-all-v1.js?v=20260709-student-only-1"></script><script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js": "./three-reading-wrapper.js?v=20260709-student-only-1", "./app-config.js": "./app-config.js?v=20260709-student-only-1", "./firebase-config.js": "./firebase-config-v3.js?v=20260709-student-only-1" } }</script><script type="module" src="./map-controls.js?v=20260709-student-only-1"></script><script type="module" src="./app-stage.js?v=20260709-teacher-1"></script><script type="module" src="./country-scenes.js?v=20260709-student-only-1"></script><script type="module" src="./reading-history.js?v=20260709-student-only-1"></script><script type="module" src="./daily-book-recommendation.js?v=20260709-secure-login-2"></script>
 </body>
 </html>
