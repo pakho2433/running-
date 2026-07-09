@@ -57,14 +57,14 @@ function bindEvents() {
 async function handleLogin(event) {
   event.preventDefault();
   loginBusy(true);
-  loginMessage("正在開啟學校 Google 登入……");
+  loginMessage("正在轉到 Google 選擇帳號畫面……");
   try {
     const user = await loginStudent();
-    await enter(user, false);
+    if (user) await enter(user, false);
+    else loginMessage("正在前往 Google 登入頁面……");
   } catch (error) {
     console.error(error);
     loginMessage(loginError(error), true);
-  } finally {
     loginBusy(false);
   }
 }
@@ -214,7 +214,7 @@ function showLogin() { dom.appShell.classList.add("is-hidden"); dom.loginScreen.
 function loginBusy(value) { if (dom.loginButton) dom.loginButton.disabled = value; }
 function loginMessage(text, error = false) { dom.loginMessage.textContent = text; dom.loginMessage.dataset.state = error ? "error" : "loading"; }
 function dataError(error) { console.error(error); sync("error", "● 權限或同步失敗"); toast("未能讀取資料，請重新登入。", true); }
-function loginError(error) { if (error?.message === "INVALID_DOMAIN") return "請使用 @twghscysps.edu.hk 學校 Google 帳戶登入。"; if (error?.message === "PROFILE_MISMATCH") return "此 Google 帳戶未獲授權，或未設定學生身份。"; if (error?.code === "auth/popup-closed-by-user") return "你已取消 Google 登入。"; return "暫時未能登入，請檢查 Google 帳戶及網絡。"; }
+function loginError(error) { if (error?.message === "INVALID_DOMAIN") return "請使用 @twghscysps.edu.hk 學校 Google 帳戶登入。"; if (error?.message === "PROFILE_MISMATCH") return "此 Google 帳戶未獲授權，或未設定學生身份。"; if (error?.code === "auth/unauthorized-domain") return "Firebase 未授權此網域，請在 Authentication Authorized domains 加入 pakho2433.github.io。"; return "暫時未能登入，請檢查 Google 帳戶及網絡。"; }
 function locationFor(distance) { return Math.max(0, Math.min(LOCATION_COUNT - 1, Math.floor(Number(distance || 0) / STAGE_DISTANCE))); }
 function compare(a, b) { return Number(b.distance || 0) - Number(a.distance || 0) || Number(b.booksCount || 0) - Number(a.booksCount || 0); }
 function clean(value, limit) { return String(value || "").trim().replace(/\s+/g, " ").slice(0, limit); }
