@@ -1,6 +1,7 @@
 node_modules/
 admin-tools/service-account.json
 admin-tools/users.csv
+admin-tools/users.generated.csv
 admin-tools/*.private.csv
 .env
 .DS_Store
