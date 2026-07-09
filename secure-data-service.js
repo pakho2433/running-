@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js?secure-data=1";
-import { browserSessionPersistence, getAuth, getRedirectResult, GoogleAuthProvider, setPersistence, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
+import { browserSessionPersistence, getAuth, setPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
 import { collection, doc, getDoc, getFirestore, increment, onSnapshot, query, runTransaction, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js?secure-data=1";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check.js?secure-data=1";
 import { APP_CONFIG } from "./app-config.js";
@@ -8,14 +8,13 @@ import { securityConfig } from "./security-config.js";
 
 const SESSION_KEY = "reading-run-session-v1";
 const DAILY_LIMIT = Number(APP_CONFIG.dailyBookLimit || 5);
-const SCHOOL_DOMAIN = "@twghscysps.edu.hk";
-const HOSTED_DOMAIN = "twghscysps.edu.hk";
+const SCHOOL_CODE = "scysps";
+const STUDENT_AUTH_DOMAIN = "students.readingrun.invalid";
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 let stopPrivate = null;
 let stopClass = null;
-let redirectChecked = false;
 
 export async function initialiseSecurity() {
   const siteKey = String(securityConfig.appCheckSiteKey || "");
@@ -27,44 +26,34 @@ export async function initialiseSecurity() {
     }
   }
   await setPersistence(auth, browserSessionPersistence);
-  await consumeRedirectResult();
   if (typeof auth.authStateReady === "function") await auth.authStateReady();
 }
 
-export async function loginStudent() {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ hd: HOSTED_DOMAIN, prompt: "select_account" });
-  await signInWithRedirect(auth, provider);
-  return null;
+export async function loginStudent(classId, studentId, password) {
+  const safeClassId = normaliseClassId(classId);
+  const safeStudentId = normaliseStudentId(studentId);
+  const safePassword = String(password || "").trim();
+  if (!safeClassId || !safeStudentId || safePassword.length < 6) throw new Error("MISSING_LOGIN_FIELDS");
+  const email = buildStudentEmail(safeClassId, safeStudentId);
+  const credential = await signInWithEmailAndPassword(auth, email, safePassword);
+  return authoriseStudent(credential.user.uid, safeClassId, safeStudentId);
 }
 
 export async function restoreStudent() {
-  await consumeRedirectResult();
-  if (!auth.currentUser) return null;
-  return authoriseStudent(auth.currentUser.uid);
+  const session = readSession();
+  if (!auth.currentUser || !session?.classId || !session?.studentId) return null;
+  return authoriseStudent(auth.currentUser.uid, session.classId, session.studentId);
 }
 
-async function consumeRedirectResult() {
-  if (redirectChecked) return;
-  redirectChecked = true;
-  try {
-    await getRedirectResult(auth);
-  } catch (error) {
-    console.warn("Google redirect result could not be completed", error);
-    throw error;
-  }
-}
-
-async function authoriseStudent(uid) {
-  if (!isSchoolEmail(auth.currentUser?.email)) {
-    await signOut(auth).catch(() => {});
-    throw new Error("INVALID_DOMAIN");
-  }
+async function authoriseStudent(uid, classId, studentId) {
   const snapshot = await getDoc(doc(db, "users", uid));
   const profile = snapshot.data() || {};
-  const classId = String(profile.classId || "").toUpperCase();
-  const studentId = String(profile.studentId || "").toUpperCase();
-  if (profile.role !== "student" || profile.active === false || !classId || !studentId) {
+  if (
+    profile.role !== "student"
+    || profile.active === false
+    || String(profile.classId || "").toUpperCase() !== classId
+    || String(profile.studentId || "").toUpperCase() !== studentId
+  ) {
     await signOut(auth).catch(() => {});
     throw new Error("PROFILE_MISMATCH");
   }
@@ -202,6 +191,19 @@ export function schoolDateKey() {
   return new Intl.DateTimeFormat("en-CA", { timeZone: APP_CONFIG.schoolTimeZone || "Asia/Hong_Kong", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 }
 
-function isSchoolEmail(email) {
-  return String(email || "").toLowerCase().endsWith(SCHOOL_DOMAIN);
+function buildStudentEmail(classId, studentId) {
+  return `${SCHOOL_CODE}.${classId}.${studentId}@${STUDENT_AUTH_DOMAIN}`.toLowerCase();
+}
+
+function normaliseClassId(value) {
+  return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 12);
+}
+
+function normaliseStudentId(value) {
+  return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 20);
+}
+
+function readSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); }
+  catch { return null; }
 }
