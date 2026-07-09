@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js?secure-data=1";
-import { browserSessionPersistence, getAuth, setPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
+import { browserSessionPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
 import { collection, doc, getDoc, getFirestore, increment, onSnapshot, query, runTransaction, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js?secure-data=1";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check.js?secure-data=1";
 import { APP_CONFIG } from "./app-config.js";
@@ -8,6 +8,8 @@ import { securityConfig } from "./security-config.js";
 
 const SESSION_KEY = "reading-run-session-v1";
 const DAILY_LIMIT = Number(APP_CONFIG.dailyBookLimit || 5);
+const SCHOOL_DOMAIN = "@twghscysps.edu.hk";
+const HOSTED_DOMAIN = "twghscysps.edu.hk";
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -18,10 +20,7 @@ export async function initialiseSecurity() {
   const siteKey = String(securityConfig.appCheckSiteKey || "");
   if (siteKey && !siteKey.startsWith("PASTE_")) {
     try {
-      initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(siteKey),
-        isTokenAutoRefreshEnabled: true,
-      });
+      initializeAppCheck(app, { provider: new ReCaptchaV3Provider(siteKey), isTokenAutoRefreshEnabled: true });
     } catch (error) {
       console.warn("App Check was not started", error);
     }
@@ -30,8 +29,11 @@ export async function initialiseSecurity() {
   if (typeof auth.authStateReady === "function") await auth.authStateReady();
 }
 
-export async function loginStudent(classId, studentId, pin) {
-  const credential = await signInWithEmailAndPassword(auth, studentEmail(classId, studentId), pin);
+export async function loginStudent(classId, studentId) {
+  await setPersistence(auth, browserSessionPersistence);
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ hd: HOSTED_DOMAIN, prompt: "select_account" });
+  const credential = await signInWithPopup(auth, provider);
   return authoriseStudent(credential.user.uid, classId, studentId);
 }
 
@@ -42,6 +44,10 @@ export async function restoreStudent() {
 }
 
 async function authoriseStudent(uid, classId, studentId) {
+  if (!isSchoolEmail(auth.currentUser?.email)) {
+    await signOut(auth).catch(() => {});
+    throw new Error("INVALID_DOMAIN");
+  }
   const snapshot = await getDoc(doc(db, "users", uid));
   const profile = snapshot.data() || {};
   if (
@@ -53,7 +59,7 @@ async function authoriseStudent(uid, classId, studentId) {
     await signOut(auth).catch(() => {});
     throw new Error("PROFILE_MISMATCH");
   }
-  const user = { uid, classId, studentId, key: `${classId}__${studentId}` };
+  const user = { uid, classId, studentId, email: auth.currentUser?.email || "", key: `${classId}__${studentId}` };
   localStorage.setItem(SESSION_KEY, JSON.stringify({ classId, studentId }));
   await ensureStudent(user);
   return user;
@@ -68,6 +74,7 @@ async function ensureStudent(user) {
       transaction.set(privateRef, {
         classId: user.classId,
         studentId: user.studentId,
+        email: user.email,
         booksCount: 0,
         distance: 0,
         lastBook: "",
@@ -193,9 +200,8 @@ export function schoolDateKey() {
   }).format(new Date());
 }
 
-function studentEmail(classId, studentId) {
-  const code = String(securityConfig.schoolCode || "readingrun").toLowerCase().replace(/[^a-z0-9-]/g, "");
-  return `${code}.${classId}.${studentId}@students.readingrun.invalid`.toLowerCase();
+function isSchoolEmail(email) {
+  return String(email || "").toLowerCase().endsWith(SCHOOL_DOMAIN);
 }
 
 function readSession() {
