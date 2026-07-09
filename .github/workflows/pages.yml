@@ -2,7 +2,10 @@ name: Deploy static site to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - pages-security-preview
+      - security/harden-school-500-users
   workflow_dispatch:
 
 permissions:
@@ -17,7 +20,7 @@ concurrency:
 jobs:
   deploy:
     environment:
-      name: github-pages
+      name: ${{ github.ref == 'refs/heads/main' && 'github-pages' || 'github-pages-preview' }}
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
