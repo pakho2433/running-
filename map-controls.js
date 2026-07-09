@@ -3,7 +3,7 @@ import { MathUtils, Vector3 } from "./three-reading-wrapper.js";
 const state = {
   mode: "overview",
   yaw: 0,
-  pitch: -0.2,
+  pitch: 0.28,
   orbitDistance: 58,
   dragging: false,
   activePointers: new Map(),
@@ -53,9 +53,7 @@ function bindButtons() {
     setExpanded(!shell.classList.contains("is-map-expanded"));
   });
 
-  exitButton.addEventListener("click", () => {
-    setExpanded(false);
-  });
+  exitButton.addEventListener("click", () => setExpanded(false));
 
   firstPersonButton.addEventListener("click", () => {
     state.mode = state.mode === "first" ? "overview" : "first";
@@ -67,26 +65,22 @@ function bindButtons() {
   orbitButton.addEventListener("click", () => {
     state.mode = state.mode === "orbit" ? "overview" : "orbit";
     state.yaw = 0;
-    state.pitch = -0.28;
+    state.pitch = 0.28;
     state.orbitDistance = getDefaultOrbitDistance();
     updateControls();
   });
 
-  resetButton.addEventListener("click", () => {
-    resetToOverview();
-  });
+  resetButton.addEventListener("click", resetToOverview);
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && shell.classList.contains("is-map-expanded")) {
-      setExpanded(false);
-    }
+    if (event.key === "Escape" && shell.classList.contains("is-map-expanded")) setExpanded(false);
   });
 }
 
 function resetToOverview() {
   state.mode = "overview";
   state.yaw = 0;
-  state.pitch = -0.2;
+  state.pitch = 0.28;
   state.orbitDistance = getDefaultOrbitDistance();
   restoreRunner();
   updateControls();
@@ -139,14 +133,15 @@ function bindPointerControls() {
       const distance = pointerDistance();
       if (state.lastPinchDistance && distance > 0) {
         const ratio = state.lastPinchDistance / distance;
-        state.orbitDistance = MathUtils.clamp(state.orbitDistance * ratio, 16, 150);
+        state.orbitDistance = MathUtils.clamp(state.orbitDistance * ratio, 20, 140);
       }
       state.lastPinchDistance = distance;
     } else {
       const dx = event.clientX - previous.x;
       const dy = event.clientY - previous.y;
       state.yaw -= dx * 0.007;
-      state.pitch = MathUtils.clamp(state.pitch - dy * 0.006, -1.15, 1.15);
+      const nextPitch = state.pitch - dy * 0.006;
+      state.pitch = state.mode === "orbit" ? MathUtils.clamp(nextPitch, 0.08, 1.15) : MathUtils.clamp(nextPitch, -1.15, 1.15);
     }
     event.preventDefault();
   });
@@ -166,17 +161,17 @@ function bindPointerControls() {
   canvasHost.addEventListener("lostpointercapture", release);
 
   canvasHost.addEventListener("wheel", (event) => {
-    // Mouse wheel should zoom the map directly, even before the user presses 360°.
     if (state.mode === "overview") {
       state.mode = "orbit";
       state.yaw = 0;
-      state.pitch = -0.28;
+      state.pitch = 0.28;
       state.orbitDistance = getDefaultOrbitDistance();
       updateControls();
     }
 
-    const zoomSpeed = event.ctrlKey ? 0.08 : 0.045;
-    state.orbitDistance = MathUtils.clamp(state.orbitDistance + event.deltaY * zoomSpeed, 16, 150);
+    const units = MathUtils.clamp(event.deltaY / 120, -1, 1);
+    const factor = 1 + units * 0.09;
+    state.orbitDistance = MathUtils.clamp(state.orbitDistance * factor, 20, 140);
     event.preventDefault();
   }, { passive: false });
 }
@@ -308,7 +303,7 @@ function updateControls() {
   if (state.mode === "first") {
     hint.textContent = "第一身視角：在地圖拖曳可上下左右觀看；按「重設視角」返回全景。";
   } else if (state.mode === "orbit") {
-    hint.textContent = "360° 自由觀看：滑鼠滾輪可放大縮小；拖曳旋轉；雙指可縮放。";
+    hint.textContent = "360° 自由觀看：滑鼠滾輪慢慢放大縮小；拖曳旋轉；視角不會跌到地底。";
   } else {
     hint.textContent = "滑鼠滾輪可直接放大；按「放大地圖」看全屏；按「360°」可自由旋轉。";
   }
