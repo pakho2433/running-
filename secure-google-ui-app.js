@@ -22,7 +22,6 @@ async function start() {
   setupGoogleLoginUi();
   track = new SecureTrack(dom.trackCanvas, STAGE_DISTANCE);
   dom.schoolTitle.textContent = APP_CONFIG.schoolName;
-  dom.loginClass.replaceChildren(...APP_CONFIG.classrooms.map((room) => makeOption(room.id, room.name)));
   dom.readingDate.value = schoolDateKey();
   bindEvents();
   await initialiseSecurity();
@@ -37,12 +36,13 @@ async function start() {
 }
 
 function setupGoogleLoginUi() {
-  const pin = $("#studentPin");
-  pin?.closest("label")?.remove();
+  dom.loginClass?.closest("label")?.remove();
+  dom.studentId?.closest("label")?.remove();
+  $("#studentPin")?.closest("label")?.remove();
   const intro = $(".login-intro");
-  if (intro) intro.textContent = "請選擇課室、輸入學生 ID，然後使用學校 Google 帳戶登入。";
+  if (intro) intro.textContent = "請使用 @twghscysps.edu.hk 學校 Google 帳戶登入。";
   const note = $(".privacy-note");
-  if (note) note.textContent = "只允許 @twghscysps.edu.hk Google 帳戶登入；身份仍會按學生 ID 核對。";
+  if (note) note.textContent = "系統會按 Google 帳戶自動讀取你的班別和學生 ID。";
   dom.loginButton.textContent = "使用學校 Google 登入";
 }
 
@@ -56,13 +56,10 @@ function bindEvents() {
 
 async function handleLogin(event) {
   event.preventDefault();
-  const classId = normalise(dom.loginClass.value, 12);
-  const studentId = normalise(dom.studentId.value, 20);
-  if (!classId || !studentId) return loginMessage("請先選擇課室並輸入學生 ID。", true);
   loginBusy(true);
   loginMessage("正在開啟學校 Google 登入……");
   try {
-    const user = await loginStudent(classId, studentId);
+    const user = await loginStudent();
     await enter(user, false);
   } catch (error) {
     console.error(error);
@@ -74,8 +71,6 @@ async function handleLogin(event) {
 
 async function enter(user, restored) {
   state.user = user;
-  dom.loginClass.value = user.classId;
-  dom.studentId.value = user.studentId;
   dom.loginScreen.classList.add("is-hidden");
   dom.appShell.classList.remove("is-hidden");
   sync("saved", "● 已使用學校 Google 帳戶登入");
@@ -216,17 +211,15 @@ function clearForm() {
 
 function updateScore() { dom.scorePreview.textContent = String(scoreReading(readRecord())); }
 function showLogin() { dom.appShell.classList.add("is-hidden"); dom.loginScreen.classList.remove("is-hidden"); sync("idle", "● 等待學校 Google 登入"); }
-function loginBusy(value) { [dom.loginClass, dom.studentId, dom.loginButton].forEach((item) => { if (item) item.disabled = value; }); }
+function loginBusy(value) { if (dom.loginButton) dom.loginButton.disabled = value; }
 function loginMessage(text, error = false) { dom.loginMessage.textContent = text; dom.loginMessage.dataset.state = error ? "error" : "loading"; }
 function dataError(error) { console.error(error); sync("error", "● 權限或同步失敗"); toast("未能讀取資料，請重新登入。", true); }
-function loginError(error) { if (error?.message === "INVALID_DOMAIN") return "請使用 @twghscysps.edu.hk 學校 Google 帳戶登入。"; if (error?.message === "PROFILE_MISMATCH") return "Google 帳戶與班別或學生 ID 不符。"; if (error?.code === "auth/popup-closed-by-user") return "你已取消 Google 登入。"; return "暫時未能登入，請檢查 Google 帳戶及網絡。"; }
+function loginError(error) { if (error?.message === "INVALID_DOMAIN") return "請使用 @twghscysps.edu.hk 學校 Google 帳戶登入。"; if (error?.message === "PROFILE_MISMATCH") return "此 Google 帳戶未獲授權，或未設定學生身份。"; if (error?.code === "auth/popup-closed-by-user") return "你已取消 Google 登入。"; return "暫時未能登入，請檢查 Google 帳戶及網絡。"; }
 function locationFor(distance) { return Math.max(0, Math.min(LOCATION_COUNT - 1, Math.floor(Number(distance || 0) / STAGE_DISTANCE))); }
 function compare(a, b) { return Number(b.distance || 0) - Number(a.distance || 0) || Number(b.booksCount || 0) - Number(a.booksCount || 0); }
-function normalise(value, limit) { return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, limit); }
 function clean(value, limit) { return String(value || "").trim().replace(/\s+/g, " ").slice(0, limit); }
 function roomName(id) { return APP_CONFIG.classrooms.find((room) => room.id === id)?.name || id; }
 function number(value) { return new Intl.NumberFormat("zh-HK").format(Number(value || 0)); }
-function makeOption(value, text) { const item = document.createElement("option"); item.value = value; item.textContent = text; return item; }
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character])); }
 function sync(status, text) { dom.syncStatus.dataset.state = status; dom.syncStatus.textContent = text; }
 function toast(text, error = false) { const item = document.createElement("div"); item.className = `toast${error ? " error" : ""}`; item.textContent = text; dom.toastRegion.append(item); setTimeout(() => item.remove(), 4000); }
