@@ -9,10 +9,6 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    function isTeacher() {
-      return signedIn() && profile().role == "teacher";
-    }
-
     function isStudent() {
       return signedIn()
         && profile().role == "student"
@@ -159,54 +155,33 @@ service cloud.firestore {
         && studentAfter.dailyBooksCount == data.dailySequence;
     }
 
-    function validRecommendation(data, dateKey) {
-      return data.dateKey == dateKey
-        && data.dateKey is string
-        && data.dateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
-        && data.title is string
-        && data.title.size() >= 1
-        && data.title.size() <= 120
-        && data.author is string
-        && data.author.size() >= 1
-        && data.author.size() <= 120
-        && data.coverUrl is string
-        && data.coverUrl.size() <= 500
-        && data.platformUrl is string
-        && data.platformUrl.matches('^https://.*')
-        && data.platformUrl.size() <= 500;
-    }
-
     match /users/{uid} {
-      allow read: if signedIn() && (request.auth.uid == uid || isTeacher());
+      allow read: if signedIn() && request.auth.uid == uid;
       allow create, update, delete: if false;
     }
 
     match /students/{studentKey} {
-      allow read: if isTeacher() || (isStudent() && studentKey == myStudentKey());
+      allow read: if isStudent() && studentKey == myStudentKey();
       allow create: if validStudentCreate(request.resource.data, studentKey);
-      allow update: if isTeacher() || validStudentUpdate(studentKey);
+      allow update: if validStudentUpdate(studentKey);
       allow delete: if false;
     }
 
     match /publicStudents/{studentKey} {
-      allow read: if isTeacher()
-        || (isStudent() && resource.data.classId == profile().classId);
+      allow read: if isStudent() && resource.data.classId == profile().classId;
       allow create, update: if validPublicStudent(request.resource.data, studentKey);
       allow delete: if false;
     }
 
     match /bookLogs/{logId} {
-      allow read: if isTeacher()
-        || (isStudent() && resource.data.studentKey == myStudentKey());
+      allow read: if isStudent() && resource.data.studentKey == myStudentKey();
       allow create: if validBookLog(request.resource.data, logId);
       allow update, delete: if false;
     }
 
     match /dailyRecommendations/{dateKey} {
       allow read: if signedIn();
-      allow create, update: if isTeacher()
-        && validRecommendation(request.resource.data, dateKey);
-      allow delete: if isTeacher();
+      allow create, update, delete: if false;
     }
 
     match /{document=**} {
