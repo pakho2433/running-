@@ -7,15 +7,14 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>閱讀跑道 Reading Run｜密碼登入版</title>
-  <link rel="stylesheet" href="./styles.css?v=20260709-password-login-2" />
-  <link rel="stylesheet" href="./stage-fix.css?v=20260709-password-login-2" />
-  <link rel="stylesheet" href="./colorful-theme.css?v=20260709-password-login-2" />
-  <link rel="stylesheet" href="./map-controls.css?v=20260709-password-login-2" />
-  <link rel="stylesheet" href="./book-mascot.css?v=20260709-password-login-2" />
-  <link rel="stylesheet" href="./country-history.css?v=20260709-password-login-2" />
-  <link rel="stylesheet" href="./teacher-center.css?v=20260709-password-login-2" />
-  <link rel="stylesheet" href="./daily-book-recommendation.css?v=20260709-password-login-2" />
+  <title>閱讀跑道 Reading Run｜學生登入版</title>
+  <link rel="stylesheet" href="./styles.css?v=20260709-student-only-1" />
+  <link rel="stylesheet" href="./stage-fix.css?v=20260709-student-only-1" />
+  <link rel="stylesheet" href="./colorful-theme.css?v=20260709-student-only-1" />
+  <link rel="stylesheet" href="./map-controls.css?v=20260709-student-only-1" />
+  <link rel="stylesheet" href="./book-mascot.css?v=20260709-student-only-1" />
+  <link rel="stylesheet" href="./country-history.css?v=20260709-student-only-1" />
+  <link rel="stylesheet" href="./daily-book-recommendation.css?v=20260709-student-only-1" />
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -31,7 +30,7 @@
         <button id="loginButton" class="primary-button" type="submit">安全登入</button>
       </form>
       <div id="loginMessage" class="form-message" role="status"></div>
-      <p class="privacy-note">學生登入密碼由教師管理。</p>
+      <p class="privacy-note">此平台只提供學生登入，不設教師登入入口。</p>
     </section>
   </div>
 
@@ -67,8 +66,8 @@
     </main>
   </div>
 
-  <div id="readingHistoryModal" class="history-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="readingHistoryTitle"><section class="history-dialog"><header class="history-dialog-header"><div><p class="eyebrow">READING BUDDY</p><h2 id="readingHistoryTitle">我的閱讀歷史</h2><p>只有本人及獲授權教師可以查看。</p></div><button id="readingHistoryClose" class="history-close-button" type="button" aria-label="關閉閱讀歷史">✕</button></header><div class="history-summary-bar"><strong id="readingHistorySummary"></strong><span id="readingHistoryStatus" role="status">按 Reading Buddy 載入紀錄。</span></div><div id="readingHistoryList" class="history-list"></div></section></div>
+  <div id="readingHistoryModal" class="history-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="readingHistoryTitle"><section class="history-dialog"><header class="history-dialog-header"><div><p class="eyebrow">READING BUDDY</p><h2 id="readingHistoryTitle">我的閱讀歷史</h2><p>只有本人可以查看。</p></div><button id="readingHistoryClose" class="history-close-button" type="button" aria-label="關閉閱讀歷史">✕</button></header><div class="history-summary-bar"><strong id="readingHistorySummary"></strong><span id="readingHistoryStatus" role="status">按 Reading Buddy 載入紀錄。</span></div><div id="readingHistoryList" class="history-list"></div></section></div>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <script src="./reset-all-v1.js?v=20260709-password-login-2"></script><script src="./require-login.js?v=20260709-password-login-2"></script><script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js": "./three-reading-wrapper.js?v=20260709-password-login-2", "./app-config.js": "./app-config.js?v=20260709-password-login-2", "./firebase-config.js": "./firebase-config-v3.js?v=20260709-password-login-2" } }</script><script type="module" src="./map-controls.js?v=20260709-password-login-2"></script><script type="module" src="./app-stage.js?v=20260709-password-login-2"></script><script type="module" src="./teacher-center-secure.js?v=20260709-password-login-2"></script><script type="module" src="./country-scenes.js?v=20260709-password-login-2"></script><script type="module" src="./reading-history.js?v=20260709-password-login-2"></script>
+  <script src="./reset-all-v1.js?v=20260709-student-only-1"></script><script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js": "./three-reading-wrapper.js?v=20260709-student-only-1", "./app-config.js": "./app-config.js?v=20260709-student-only-1", "./firebase-config.js": "./firebase-config-v3.js?v=20260709-student-only-1" } }</script><script type="module" src="./map-controls.js?v=20260709-student-only-1"></script><script type="module" src="./app-stage.js?v=20260709-student-only-1"></script><script type="module" src="./country-scenes.js?v=20260709-student-only-1"></script><script type="module" src="./reading-history.js?v=20260709-student-only-1"></script><script type="module" src="./daily-book-recommendation.js?v=20260709-student-only-1"></script>
 </body>
 </html>
