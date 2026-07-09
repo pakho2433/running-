@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js?secure-data=1";
-import { browserSessionPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
+import { browserSessionPersistence, getAuth, getRedirectResult, GoogleAuthProvider, setPersistence, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
 import { collection, doc, getDoc, getFirestore, increment, onSnapshot, query, runTransaction, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js?secure-data=1";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check.js?secure-data=1";
 import { APP_CONFIG } from "./app-config.js";
@@ -15,6 +15,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 let stopPrivate = null;
 let stopClass = null;
+let redirectChecked = false;
 
 export async function initialiseSecurity() {
   const siteKey = String(securityConfig.appCheckSiteKey || "");
@@ -26,19 +27,32 @@ export async function initialiseSecurity() {
     }
   }
   await setPersistence(auth, browserSessionPersistence);
+  await consumeRedirectResult();
   if (typeof auth.authStateReady === "function") await auth.authStateReady();
 }
 
 export async function loginStudent() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ hd: HOSTED_DOMAIN, prompt: "select_account" });
-  const credential = await signInWithPopup(auth, provider);
-  return authoriseStudent(credential.user.uid);
+  await signInWithRedirect(auth, provider);
+  return null;
 }
 
 export async function restoreStudent() {
+  await consumeRedirectResult();
   if (!auth.currentUser) return null;
   return authoriseStudent(auth.currentUser.uid);
+}
+
+async function consumeRedirectResult() {
+  if (redirectChecked) return;
+  redirectChecked = true;
+  try {
+    await getRedirectResult(auth);
+  } catch (error) {
+    console.warn("Google redirect result could not be completed", error);
+    throw error;
+  }
 }
 
 async function authoriseStudent(uid) {
