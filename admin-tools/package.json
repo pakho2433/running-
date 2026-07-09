@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "import-users": "node import-users-from-csv.mjs"
+    "import-users": "node import-users-from-csv.mjs",
+    "create-teacher": "node create-teacher.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.4.0"
