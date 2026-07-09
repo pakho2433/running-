@@ -30,7 +30,6 @@ export async function initialiseSecurity() {
 }
 
 export async function loginStudent() {
-  await setPersistence(auth, browserSessionPersistence);
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ hd: HOSTED_DOMAIN, prompt: "select_account" });
   const credential = await signInWithPopup(auth, provider);
@@ -51,12 +50,7 @@ async function authoriseStudent(uid) {
   const profile = snapshot.data() || {};
   const classId = String(profile.classId || "").toUpperCase();
   const studentId = String(profile.studentId || "").toUpperCase();
-  if (
-    profile.role !== "student"
-    || profile.active === false
-    || !classId
-    || !studentId
-  ) {
+  if (profile.role !== "student" || profile.active === false || !classId || !studentId) {
     await signOut(auth).catch(() => {});
     throw new Error("PROFILE_MISMATCH");
   }
@@ -132,7 +126,6 @@ export async function saveReading(user, record) {
   const dateKey = schoolDateKey();
   const privateRef = doc(db, "students", user.key);
   const publicRef = doc(db, "publicStudents", user.key);
-
   return runTransaction(db, async (transaction) => {
     const snapshot = await transaction.get(privateRef);
     if (!snapshot.exists()) throw new Error("MISSING_STUDENT");
@@ -142,7 +135,6 @@ export async function saveReading(user, record) {
     const next = current + 1;
     const logRef = doc(db, "bookLogs", `${user.key}__${dateKey}__${next}`);
     if ((await transaction.get(logRef)).exists()) throw new Error("DAILY_LIMIT");
-
     transaction.set(logRef, {
       classId: user.classId,
       studentId: user.studentId,
@@ -193,12 +185,7 @@ export function scoreReading(record) {
 }
 
 export function schoolDateKey() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: APP_CONFIG.schoolTimeZone || "Asia/Hong_Kong",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  return new Intl.DateTimeFormat("en-CA", { timeZone: APP_CONFIG.schoolTimeZone || "Asia/Hong_Kong", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 }
 
 function isSchoolEmail(email) {
