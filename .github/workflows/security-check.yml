@@ -35,6 +35,8 @@ jobs:
           node --check secure-track.js
           node --check reading-history-secure.js
           node --check country-scenes-secure.js
+          node --check admin-tools/generate-student-users.mjs
+          node --check admin-tools/import-users-from-csv.mjs
 
       - name: Validate Firestore rules with emulator
         run: |
