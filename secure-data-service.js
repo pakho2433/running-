@@ -8,7 +8,7 @@ import { securityConfig } from "./security-config.js";
 
 const SESSION_KEY = "reading-run-session-v1";
 const DAILY_LIMIT = Number(APP_CONFIG.dailyBookLimit || 5);
-const SCHOOL_CODE = "scysps";
+const SCHOOL_CODE = String(securityConfig.schoolCode || "scysps").toLowerCase().replace(/[^a-z0-9-]/g, "") || "scysps";
 const STUDENT_AUTH_DOMAIN = "students.readingrun.invalid";
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
