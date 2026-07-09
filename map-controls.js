@@ -138,7 +138,7 @@ function bindPointerControls() {
       const distance = pointerDistance();
       if (state.lastPinchDistance && distance > 0) {
         const ratio = state.lastPinchDistance / distance;
-        state.orbitDistance = MathUtils.clamp(state.orbitDistance * ratio, 18, 140);
+        state.orbitDistance = MathUtils.clamp(state.orbitDistance * ratio, 16, 150);
       }
       state.lastPinchDistance = distance;
     } else {
@@ -165,8 +165,17 @@ function bindPointerControls() {
   canvasHost.addEventListener("lostpointercapture", release);
 
   canvasHost.addEventListener("wheel", (event) => {
-    if (state.mode === "overview") return;
-    state.orbitDistance = MathUtils.clamp(state.orbitDistance + event.deltaY * 0.045, 18, 140);
+    // Mouse wheel should zoom the map directly, even before the user presses 360°.
+    if (state.mode === "overview") {
+      state.mode = "orbit";
+      state.yaw = 0;
+      state.pitch = -0.28;
+      state.orbitDistance = getDefaultOrbitDistance();
+      updateControls();
+    }
+
+    const zoomSpeed = event.ctrlKey ? 0.08 : 0.045;
+    state.orbitDistance = MathUtils.clamp(state.orbitDistance + event.deltaY * zoomSpeed, 16, 150);
     event.preventDefault();
   }, { passive: false });
 }
@@ -284,9 +293,9 @@ function updateControls() {
   if (state.mode === "first") {
     hint.textContent = "第一身視角：在地圖拖曳可上下左右觀看；按「重設視角」返回全景。";
   } else if (state.mode === "orbit") {
-    hint.textContent = "360° 自由觀看：拖曳旋轉；雙指可縮放；按「重設視角」返回全景。";
+    hint.textContent = "360° 自由觀看：滑鼠滾輪可放大縮小；拖曳旋轉；雙指可縮放。";
   } else {
-    hint.textContent = "按「放大地圖」看全屏；按「第一身」或「360°」可轉換視角。";
+    hint.textContent = "滑鼠滾輪可直接放大；按「放大地圖」看全屏；按「360°」可自由旋轉。";
   }
 }
 
@@ -296,6 +305,8 @@ function resizeRenderer() {
   if (!renderer || !camera) return;
   const width = Math.max(1, canvasHost.clientWidth);
   const height = Math.max(1, canvasHost.clientHeight);
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2.5);
+  renderer.setPixelRatio?.(pixelRatio);
   renderer.setSize(width, height, false);
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
