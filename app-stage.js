@@ -1,1 +1,1 @@
-import "./secure-google-ui-app.js?v=20260709-google-login-1";
+import "./secure-google-ui-app.js?v=20260709-google-auto-2";
