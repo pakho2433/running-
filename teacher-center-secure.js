@@ -1,13 +1,11 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js?teacher-secure=1";
-import { browserSessionPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?teacher-secure=1";
+import { browserSessionPersistence, getAuth, setPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?teacher-secure=1";
 import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js?teacher-secure=1";
 import { APP_CONFIG } from "./app-config.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const APP_NAME = "reading-run-teacher-secure";
 const SHEETJS_URL = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
-const SCHOOL_DOMAIN = "@twghscysps.edu.hk";
-const HOSTED_DOMAIN = "twghscysps.edu.hk";
 const teacherApp = getApps().find((item) => item.name === APP_NAME) || initializeApp(firebaseConfig, APP_NAME);
 const auth = getAuth(teacherApp);
 const db = getFirestore(teacherApp);
@@ -24,7 +22,7 @@ function installEntryButtons() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "teacher-center-entry teacher-center-entry-secure";
-    button.textContent = index === 0 ? "👩‍🏫 教師 Google 登入" : "📊 教師數據中心";
+    button.textContent = index === 0 ? "👩‍🏫 教師登入" : "📊 教師數據中心";
     button.addEventListener("click", openCenter);
     if (index === 0) target.insertAdjacentElement("beforebegin", button);
     else target.prepend(button);
@@ -39,8 +37,8 @@ function buildUi() {
   modal.setAttribute("aria-modal", "true");
   modal.innerHTML = `
     <section class="teacher-center-dialog">
-      <header class="teacher-center-header"><div><p class="teacher-center-kicker">SECURE TEACHER CENTRE</p><h2>教師數據中心</h2><p>使用 @twghscysps.edu.hk 學校 Google 帳戶登入。</p></div><button class="teacher-center-close" type="button" aria-label="關閉">✕</button></header>
-      <section class="teacher-login-view"><form class="teacher-login-card teacher-secure-login-form"><div class="teacher-login-icon">🔐</div><h3>教師 Google 帳戶登入</h3><p>只允許 @twghscysps.edu.hk，並必須在 Firestore users/{uid} 設定 role: teacher。</p><button class="teacher-primary-button" type="submit">使用學校 Google 登入</button><p class="teacher-login-message" role="status"></p></form></section>
+      <header class="teacher-center-header"><div><p class="teacher-center-kicker">SECURE TEACHER CENTRE</p><h2>教師數據中心</h2><p>請使用教師指定 email 及密碼登入。</p></div><button class="teacher-center-close" type="button" aria-label="關閉">✕</button></header>
+      <section class="teacher-login-view"><form class="teacher-login-card teacher-secure-login-form"><div class="teacher-login-icon">🔐</div><h3>教師登入</h3><p>教師帳戶必須在 Firestore users/{uid} 設定 role: teacher。</p><label><span>Email</span><input name="email" type="email" required placeholder="teacher@example.edu.hk" /></label><label><span>密碼</span><input name="password" type="password" required placeholder="輸入教師密碼" /></label><button class="teacher-primary-button" type="submit">登入教師平台</button><p class="teacher-login-message" role="status"></p></form></section>
       <section class="teacher-dashboard-view is-hidden">
         <div class="teacher-dashboard-toolbar"><label><span>班別</span><select data-class-filter><option value="">全校</option>${APP_CONFIG.classrooms.map((room) => `<option value="${escapeHtml(room.id)}">${escapeHtml(room.name)}</option>`).join("")}</select></label><label><span>開始日期</span><input data-start-date type="date" /></label><label><span>結束日期</span><input data-end-date type="date" /></label><button class="teacher-secondary-button" data-refresh type="button">↻ 更新</button><button class="teacher-primary-button" data-export type="button">⬇ 匯出 Excel</button><button class="teacher-danger-button" data-logout type="button">登出</button></div>
         <p class="teacher-data-status" data-status role="status">尚未載入資料。</p>
@@ -68,12 +66,11 @@ function closeCenter() { ui.modal.classList.add("is-hidden"); document.body.clas
 
 async function loginTeacher(event) {
   event.preventDefault();
-  ui.loginMessage.textContent = "正在開啟學校 Google 登入……";
+  ui.loginMessage.textContent = "正在登入教師平台……";
+  const email = String(ui.loginForm.elements.email.value || "").trim();
+  const password = String(ui.loginForm.elements.password.value || "").trim();
   try {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ hd: HOSTED_DOMAIN, prompt: "select_account" });
-    const credential = await signInWithPopup(auth, provider);
-    if (!isSchoolEmail(credential.user.email)) throw new Error("INVALID_DOMAIN");
+    const credential = await signInWithEmailAndPassword(auth, email, password);
     const profile = await readTeacherProfile(credential.user.uid);
     if (!profile) throw new Error("NOT_TEACHER");
     state.authorized = true;
@@ -87,7 +84,7 @@ async function loginTeacher(event) {
     ui.loginMessage.textContent = teacherLoginError(error);
   }
 }
-async function restoreTeacher() { if (typeof auth.authStateReady === "function") await auth.authStateReady(); if (!auth.currentUser || !isSchoolEmail(auth.currentUser.email)) return; const profile = await readTeacherProfile(auth.currentUser.uid).catch(() => null); state.authorized = Boolean(profile); state.profile = profile; if (!profile) await signOut(auth).catch(() => {}); }
+async function restoreTeacher() { if (typeof auth.authStateReady === "function") await auth.authStateReady(); if (!auth.currentUser) return; const profile = await readTeacherProfile(auth.currentUser.uid).catch(() => null); state.authorized = Boolean(profile); state.profile = profile; if (!profile) await signOut(auth).catch(() => {}); }
 async function readTeacherProfile(uid) { const snapshot = await getDoc(doc(db, "users", uid)); const profile = snapshot.data() || {}; return profile.role === "teacher" && profile.active !== false ? profile : null; }
 function showLogin() { ui.loginView.classList.remove("is-hidden"); ui.dashboard.classList.add("is-hidden"); }
 function showDashboard() { ui.loginView.classList.add("is-hidden"); ui.dashboard.classList.remove("is-hidden"); ui.recommendationForm.elements.dateKey.value ||= schoolDateKey(); }
@@ -99,8 +96,7 @@ async function saveRecommendation(event) { event.preventDefault(); if (!state.au
 function renderRecommendations() { const rows = [...state.recommendations].sort((a, b) => String(a.dateKey).localeCompare(String(b.dateKey))); ui.recommendationList.replaceChildren(...rows.map((record) => { const row = document.createElement("tr"); row.innerHTML = `<td>${escapeHtml(record.dateKey)}</td><td>${escapeHtml(record.title || "")}</td><td>${escapeHtml(record.author || "")}</td><td></td>`; const button = document.createElement("button"); button.type = "button"; button.className = "is-danger"; button.textContent = "刪除"; button.addEventListener("click", async () => { if (!confirm(`確定刪除 ${record.dateKey} 的推介？`)) return; await deleteDoc(doc(db, "dailyRecommendations", record.dateKey)); await loadData(); }); row.lastElementChild.append(button); return row; })); if (!rows.length) ui.recommendationList.innerHTML = '<tr><td colspan="4">尚未設定推介。</td></tr>'; }
 async function exportExcel() { if (!state.authorized) return; ui.status.textContent = "正在製作 Excel……"; try { await loadScript(SHEETJS_URL); const XLSX = window.XLSX; const logs = filteredLogs().map((item) => ({ 日期: item.submissionDateKey || item.readingDate || "", 班別: className(item.classId), 學生ID: item.studentId || "", 書名: item.title || "", 作者: item.author || "", 類別: item.readingType || "", 科目: item.subject || "", 完成: item.completed === "yes" ? "是" : "否", 里數: Number(item.distanceAwarded || 0) })); const students = state.students.map((item) => ({ 班別: className(item.classId), 學生ID: item.studentId || "", 閱讀本數: Number(item.booksCount || 0), 閱讀里數: Number(item.distance || 0) })); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(logs), "閱讀紀錄"); XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(students), "學生統計"); XLSX.writeFile(workbook, `reading-run-${schoolDateKey()}.xlsx`); ui.status.textContent = "Excel 已匯出。"; } catch (error) { console.error(error); ui.status.textContent = "Excel 匯出失敗。"; } }
 function loadScript(src) { if (window.XLSX) return Promise.resolve(); return new Promise((resolve, reject) => { const script = document.createElement("script"); script.src = src; script.onload = resolve; script.onerror = reject; document.head.append(script); }); }
-function teacherLoginError(error) { if (error?.message === "INVALID_DOMAIN") return "請使用 @twghscysps.edu.hk 學校 Google 帳戶。"; if (error?.message === "NOT_TEACHER") return "此 Google 帳戶沒有教師權限。"; if (error?.code === "auth/popup-closed-by-user") return "你已取消 Google 登入。"; return "教師 Google 登入失敗，請稍後再試。"; }
-function isSchoolEmail(email) { return String(email || "").toLowerCase().endsWith(SCHOOL_DOMAIN); }
+function teacherLoginError(error) { if (error?.message === "NOT_TEACHER") return "此帳戶沒有教師權限。"; if (error?.code === "auth/invalid-credential" || error?.code === "auth/wrong-password" || error?.code === "auth/user-not-found") return "教師 email 或密碼不正確。"; if (error?.code === "auth/operation-not-allowed") return "Firebase 尚未啟用 Email/Password 登入。"; return "教師登入失敗，請稍後再試。"; }
 function className(id) { return APP_CONFIG.classrooms.find((item) => item.id === id)?.name || id || ""; }
 function clean(value, length) { return String(value || "").trim().replace(/\s+/g, " ").slice(0, length); }
 function safeHttps(value, optional) { const text = String(value || "").trim(); if (!text) return optional ? "" : null; try { const url = new URL(text); return url.protocol === "https:" ? url.href : null; } catch { return null; } }
