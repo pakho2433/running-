@@ -1,5 +1,5 @@
 import { APP_CONFIG } from "./app-config.js";
-import { initialiseSecurity, loginStudent, logoutStudent, restoreStudent, saveReading, schoolDateKey, scoreReading, subscribeStudent } from "./secure-data-service.js?v=20260709-secure-login-2";
+import { initialiseSecurity, loginStudent, logoutStudent, restoreStudent, saveReading, schoolDateKey, scoreReading, subscribeStudent } from "./secure-data-service.js?v=20260709-secure-login-3";
 
 const $ = (selector) => document.querySelector(selector);
 const dom = {
