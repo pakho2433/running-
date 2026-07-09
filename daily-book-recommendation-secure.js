@@ -33,7 +33,7 @@ function installCard() {
     <div class="daily-book-content">
       <p class="daily-book-eyebrow">DAILY BOOK · 每天一本好書推介</p>
       <h2>今日好書</h2><p class="daily-book-author"></p>
-      <p class="daily-book-notice">連結由已核准教師設定；本平台不會儲存電子書帳號或密碼。</p>
+      <p class="daily-book-notice">按下「我要閱讀」後會開啟學校電子書平台。學生需自行登入；本平台不會儲存或自動輸入電子書帳號及密碼。</p>
       <a class="daily-book-read-button" href="${DEFAULT_PLATFORM_URL}" target="_blank" rel="noopener noreferrer">📖 我要閱讀</a>
     </div>`;
   contentArea.prepend(section);
