@@ -254,14 +254,28 @@ body.map-expanded {
   }
 }
 
-body .track-shell.is-map-expanded {
+body .track-shell.is-map-expanded,
+body.map-expanded .track-shell.is-map-expanded {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
   height: 100dvh !important;
-  max-height: none !important;
   min-height: 100dvh !important;
+  max-height: none !important;
+  z-index: 99999 !important;
+  border-radius: 0 !important;
+  transform: none !important;
   touch-action: none !important;
 }
 
 body .track-shell.is-map-expanded .track-canvas,
-body .track-shell.is-map-expanded .track-canvas canvas {
+body .track-shell.is-map-expanded .track-canvas canvas,
+body.map-expanded .track-shell.is-map-expanded .track-canvas,
+body.map-expanded .track-shell.is-map-expanded .track-canvas canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
   touch-action: none !important;
 }
