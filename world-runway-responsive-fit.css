@@ -1,0 +1,145 @@
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.app-shell,
+.main-layout,
+.content-area,
+.track-section,
+.track-shell,
+.track-canvas {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.track-shell {
+  width: 100% !important;
+  aspect-ratio: 16 / 9;
+  height: clamp(440px, 52vw, 760px) !important;
+  overflow: hidden !important;
+}
+
+.track-canvas,
+.track-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+}
+
+.world-audio-toast,
+.map-view-hint {
+  max-width: calc(100% - 24px) !important;
+  white-space: normal !important;
+}
+
+@media (min-width: 821px) and (max-width: 1180px) {
+  body .track-shell:not(.is-map-expanded) {
+    height: min(56svh, 620px) !important;
+    min-height: 430px !important;
+    aspect-ratio: 4 / 3 !important;
+  }
+}
+
+@media (max-width: 820px) {
+  body .content-area,
+  body .track-section,
+  body .track-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body .track-shell:not(.is-map-expanded) {
+    height: min(50svh, 430px) !important;
+    min-height: 320px !important;
+    max-height: 430px !important;
+    aspect-ratio: auto !important;
+    border-radius: 22px !important;
+  }
+
+  body .map-control-bar {
+    top: 8px !important;
+    left: 8px !important;
+    right: 8px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  body .map-control-button {
+    min-height: 36px !important;
+    padding: 0 8px !important;
+    font-size: 11px !important;
+    line-height: 1.12 !important;
+  }
+
+  body .map-view-hint {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  body .world-audio-toast {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    transform: translateY(12px) !important;
+    max-width: none !important;
+    font-size: 12px !important;
+    border-radius: 16px !important;
+  }
+
+  body .world-audio-toast.is-visible {
+    transform: translateY(0) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  body .track-shell:not(.is-map-expanded) {
+    height: min(46svh, 370px) !important;
+    min-height: 300px !important;
+    max-height: 370px !important;
+  }
+
+  body .map-control-button {
+    min-height: 34px !important;
+    font-size: 10px !important;
+  }
+}
+
+body .track-shell.is-map-expanded,
+body.map-expanded .track-shell.is-map-expanded {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100svh !important;
+  min-height: 100svh !important;
+  max-height: none !important;
+  z-index: 99999 !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+@supports (height: 100dvh) {
+  body .track-shell.is-map-expanded,
+  body.map-expanded .track-shell.is-map-expanded {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+  }
+}
+
+body .track-shell.is-map-expanded .track-canvas,
+body .track-shell.is-map-expanded .track-canvas canvas,
+body.map-expanded .track-shell.is-map-expanded .track-canvas,
+body.map-expanded .track-shell.is-map-expanded .track-canvas canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+}
