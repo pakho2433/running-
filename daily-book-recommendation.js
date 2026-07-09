@@ -1,32 +1,23 @@
 import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
-  collection,
-  deleteDoc,
   doc,
-  getDocs,
   getFirestore,
   onSnapshot,
-  serverTimestamp,
-  setDoc,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const COLLECTION = "dailyRecommendations";
 const DEFAULT_PLATFORM_URL = "https://twghscysps.nblib.com";
-const TEACHER_SESSION_KEY = "readingrun-teacher-session-v1";
 const SCHOOL_TIME_ZONE = "Asia/Hong_Kong";
 
 const state = {
   db: null,
   studentUnsubscribe: null,
-  teacherRows: [],
-  saving: false,
 };
 
 const studentUi = installStudentRecommendationCard();
 observeStudentSession();
-waitForTeacherDashboard();
 
 function installStudentRecommendationCard() {
   const contentArea = document.querySelector(".content-area");
@@ -144,256 +135,6 @@ function renderStudentRecommendation(record) {
   studentUi.section.classList.remove("is-hidden");
 }
 
-function waitForTeacherDashboard() {
-  const tryInstall = () => {
-    const dashboard = document.querySelector(".teacher-dashboard-view");
-    if (!dashboard || dashboard.querySelector("#teacherRecommendationManager")) return false;
-    installTeacherManager(dashboard);
-    return true;
-  };
-
-  if (tryInstall()) return;
-  const observer = new MutationObserver(() => {
-    if (tryInstall()) observer.disconnect();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-}
-
-function installTeacherManager(dashboard) {
-  const section = document.createElement("section");
-  section.id = "teacherRecommendationManager";
-  section.className = "teacher-recommendation-manager";
-  section.innerHTML = `
-    <div class="teacher-recommendation-heading">
-      <div>
-        <p>DAILY BOOK SCHEDULER</p>
-        <h3>每天一本好書推介</h3>
-        <span>預先安排未來多日的書本，學生登入後只會看到當日推介。</span>
-      </div>
-      <button class="teacher-secondary-button" id="teacherRecommendationReload" type="button">↻ 更新推介</button>
-    </div>
-
-    <form id="teacherRecommendationForm" class="teacher-recommendation-form">
-      <input type="hidden" name="originalDateKey" />
-      <label>
-        <span>推介日期</span>
-        <input name="dateKey" type="date" required />
-      </label>
-      <label>
-        <span>書名</span>
-        <input name="title" type="text" maxlength="120" required placeholder="輸入書名" />
-      </label>
-      <label>
-        <span>作者</span>
-        <input name="author" type="text" maxlength="120" required placeholder="輸入作者" />
-      </label>
-      <label class="teacher-recommendation-wide">
-        <span>封面圖片網址</span>
-        <input name="coverUrl" type="url" maxlength="500" placeholder="https://...（可留空）" />
-      </label>
-      <label class="teacher-recommendation-wide">
-        <span>電子書平台連結</span>
-        <input name="platformUrl" type="url" maxlength="500" required value="${DEFAULT_PLATFORM_URL}" />
-      </label>
-      <div class="teacher-recommendation-actions teacher-recommendation-wide">
-        <button class="teacher-primary-button" type="submit">儲存每日推介</button>
-        <button class="teacher-secondary-button" id="teacherRecommendationCancel" type="button">清除表格</button>
-      </div>
-    </form>
-
-    <p id="teacherRecommendationStatus" class="teacher-recommendation-status" role="status"></p>
-
-    <div class="teacher-recommendation-list-wrap">
-      <table class="teacher-recommendation-table">
-        <thead><tr><th>日期</th><th>封面</th><th>書名</th><th>作者</th><th>電子平台</th><th>操作</th></tr></thead>
-        <tbody id="teacherRecommendationList"><tr><td colspan="6">登入後載入推介排程。</td></tr></tbody>
-      </table>
-    </div>
-  `;
-
-  const exportInfo = dashboard.querySelector(".teacher-export-info");
-  if (exportInfo) exportInfo.insertAdjacentElement("beforebegin", section);
-  else dashboard.append(section);
-
-  const form = section.querySelector("#teacherRecommendationForm");
-  const status = section.querySelector("#teacherRecommendationStatus");
-  const list = section.querySelector("#teacherRecommendationList");
-
-  form.elements.dateKey.value = schoolDateKey();
-  form.addEventListener("submit", (event) => saveRecommendation(event, form, status, list));
-  section.querySelector("#teacherRecommendationReload").addEventListener("click", () => loadRecommendations(status, list));
-  section.querySelector("#teacherRecommendationCancel").addEventListener("click", () => resetRecommendationForm(form, status));
-
-  const teacherModal = document.querySelector("#teacherCenterModal");
-  new MutationObserver(() => {
-    const dashboardVisible = !dashboard.classList.contains("is-hidden");
-    if (dashboardVisible && teacherSessionValid()) loadRecommendations(status, list);
-  }).observe(dashboard, { attributes: true, attributeFilter: ["class"] });
-}
-
-async function loadRecommendations(status, list) {
-  if (!teacherSessionValid()) return;
-  status.textContent = "正在載入推介排程……";
-  status.dataset.state = "loading";
-  try {
-    const db = await getDatabase();
-    const snapshot = await getDocs(collection(db, COLLECTION));
-    state.teacherRows = snapshot.docs
-      .map((item) => ({ dateKey: item.id, ...item.data() }))
-      .sort((a, b) => String(a.dateKey).localeCompare(String(b.dateKey)));
-    renderRecommendationList(list, status);
-  } catch (error) {
-    console.error("Unable to load recommendations", error);
-    status.textContent = "未能載入推介排程，請檢查 Firebase 權限。";
-    status.dataset.state = "error";
-  }
-}
-
-function renderRecommendationList(list, status) {
-  list.replaceChildren();
-  if (!state.teacherRows.length) {
-    const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="6">尚未設定任何每日好書推介。</td>';
-    list.append(row);
-    status.textContent = "目前沒有推介排程。";
-    status.dataset.state = "ready";
-    return;
-  }
-
-  state.teacherRows.forEach((record) => {
-    const row = document.createElement("tr");
-    const coverUrl = safeHttpsUrl(record.coverUrl);
-    const platformUrl = safeHttpsUrl(record.platformUrl) || DEFAULT_PLATFORM_URL;
-    row.innerHTML = `
-      <td>${escapeHtml(record.dateKey)}</td>
-      <td>${coverUrl ? `<img class="teacher-recommendation-thumb" src="${escapeHtml(coverUrl)}" alt="" />` : "📚"}</td>
-      <td>${escapeHtml(record.title || "")}</td>
-      <td>${escapeHtml(record.author || "")}</td>
-      <td><a href="${escapeHtml(platformUrl)}" target="_blank" rel="noopener noreferrer">開啟</a></td>
-      <td class="teacher-recommendation-row-actions"></td>
-    `;
-
-    const actions = row.querySelector(".teacher-recommendation-row-actions");
-    const editButton = document.createElement("button");
-    editButton.type = "button";
-    editButton.textContent = "編輯";
-    editButton.addEventListener("click", () => editRecommendation(record));
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.textContent = "刪除";
-    deleteButton.className = "is-danger";
-    deleteButton.addEventListener("click", () => removeRecommendation(record.dateKey, status, list));
-    actions.append(editButton, deleteButton);
-    list.append(row);
-  });
-
-  status.textContent = `已載入 ${state.teacherRows.length} 日推介排程。`;
-  status.dataset.state = "ready";
-}
-
-async function saveRecommendation(event, form, status, list) {
-  event.preventDefault();
-  if (!teacherSessionValid() || state.saving) return;
-
-  const dateKey = String(form.elements.dateKey.value || "");
-  const title = clean(form.elements.title.value, 120);
-  const author = clean(form.elements.author.value, 120);
-  const coverUrl = safeOptionalUrl(form.elements.coverUrl.value);
-  const platformUrl = safeHttpsUrl(form.elements.platformUrl.value);
-  const originalDateKey = String(form.elements.originalDateKey.value || "");
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || !title || !author || !platformUrl) {
-    status.textContent = "請輸入有效日期、書名、作者及 HTTPS 電子平台連結。";
-    status.dataset.state = "error";
-    return;
-  }
-  if (form.elements.coverUrl.value.trim() && !coverUrl) {
-    status.textContent = "封面圖片網址必須是有效的 HTTPS 網址。";
-    status.dataset.state = "error";
-    return;
-  }
-
-  state.saving = true;
-  setRecommendationFormBusy(form, true);
-  status.textContent = "正在儲存推介……";
-  status.dataset.state = "loading";
-
-  try {
-    const db = await getDatabase();
-    await setDoc(doc(db, COLLECTION, dateKey), {
-      dateKey,
-      title,
-      author,
-      coverUrl: coverUrl || "",
-      platformUrl,
-      updatedAt: serverTimestamp(),
-    });
-    if (originalDateKey && originalDateKey !== dateKey) {
-      await deleteDoc(doc(db, COLLECTION, originalDateKey));
-    }
-    resetRecommendationForm(form, status);
-    status.textContent = `已儲存 ${dateKey} 的好書推介。`;
-    status.dataset.state = "ready";
-    await loadRecommendations(status, list);
-  } catch (error) {
-    console.error("Unable to save recommendation", error);
-    status.textContent = "儲存失敗，請檢查 Firebase 權限及網絡。";
-    status.dataset.state = "error";
-  } finally {
-    state.saving = false;
-    setRecommendationFormBusy(form, false);
-  }
-}
-
-function editRecommendation(record) {
-  const form = document.querySelector("#teacherRecommendationForm");
-  const status = document.querySelector("#teacherRecommendationStatus");
-  if (!form) return;
-  form.elements.originalDateKey.value = record.dateKey || "";
-  form.elements.dateKey.value = record.dateKey || schoolDateKey();
-  form.elements.title.value = record.title || "";
-  form.elements.author.value = record.author || "";
-  form.elements.coverUrl.value = record.coverUrl || "";
-  form.elements.platformUrl.value = record.platformUrl || DEFAULT_PLATFORM_URL;
-  status.textContent = `正在編輯 ${record.dateKey} 的推介。`;
-  status.dataset.state = "ready";
-  form.scrollIntoView({ behavior: "smooth", block: "center" });
-}
-
-async function removeRecommendation(dateKey, status, list) {
-  if (!teacherSessionValid()) return;
-  const confirmed = window.confirm(`確定刪除 ${dateKey} 的每日好書推介？`);
-  if (!confirmed) return;
-  status.textContent = "正在刪除推介……";
-  status.dataset.state = "loading";
-  try {
-    const db = await getDatabase();
-    await deleteDoc(doc(db, COLLECTION, dateKey));
-    await loadRecommendations(status, list);
-  } catch (error) {
-    console.error("Unable to delete recommendation", error);
-    status.textContent = "刪除失敗，請檢查 Firebase 權限。";
-    status.dataset.state = "error";
-  }
-}
-
-function resetRecommendationForm(form, status) {
-  form.reset();
-  form.elements.originalDateKey.value = "";
-  form.elements.dateKey.value = schoolDateKey();
-  form.elements.platformUrl.value = DEFAULT_PLATFORM_URL;
-  if (status) {
-    status.textContent = "";
-    status.dataset.state = "";
-  }
-}
-
-function setRecommendationFormBusy(form, busy) {
-  [...form.elements].forEach((element) => {
-    if (element.type !== "hidden") element.disabled = busy;
-  });
-}
-
 async function getDatabase() {
   if (state.db) return state.db;
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
@@ -401,15 +142,6 @@ async function getDatabase() {
   if (!auth.currentUser) await signInAnonymously(auth);
   state.db = getFirestore(app);
   return state.db;
-}
-
-function teacherSessionValid() {
-  try {
-    const session = JSON.parse(sessionStorage.getItem(TEACHER_SESSION_KEY) || "null");
-    return Boolean(session?.expiresAt && Number(session.expiresAt) > Date.now());
-  } catch {
-    return false;
-  }
 }
 
 function schoolDateKey() {
@@ -423,11 +155,6 @@ function schoolDateKey() {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
-function safeOptionalUrl(value) {
-  const text = String(value || "").trim();
-  return text ? safeHttpsUrl(text) : "";
-}
-
 function safeHttpsUrl(value) {
   try {
     const url = new URL(String(value || "").trim());
@@ -435,18 +162,4 @@ function safeHttpsUrl(value) {
   } catch {
     return "";
   }
-}
-
-function clean(value, maxLength) {
-  return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
-}
-
-function escapeHtml(value) {
-  return String(value || "").replace(/[&<>'"]/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "'": "&#39;",
-    '"': "&quot;",
-  }[character]));
 }
