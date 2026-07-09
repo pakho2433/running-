@@ -1,14 +1,24 @@
-# Reading Run 批量建立學生帳戶工具
+# Reading Run Firebase 學生帳戶匯入工具
 
-這個工具用 CSV 批量建立 Firebase Authentication 學生帳戶，並同步建立 Firestore 的 `users/{uid}`、`students/{classId}__{studentId}`、`publicStudents/{classId}__{studentId}` 文件。
+這個工具只用來把你已準備好的學生帳戶 CSV 匯入 Firebase。GitHub Pages 網頁不會、也不應該儲存學生 ID 或密碼。
+
+正確登入流程：
+
+```text
+學生在 GitHub Pages 輸入：班別 + 學生 ID + 密碼
+→ 前端把班別 + 學生 ID 轉成 Firebase Authentication email alias
+→ Firebase Authentication 驗證密碼
+→ Firestore users/{uid} 檢查 role / classId / studentId 是否吻合
+→ 通過後才進入閱讀跑道
+```
 
 ## 重要安全事項
 
 - 不要把 `service-account.json` 上載到 GitHub。
 - 不要把正式學生密碼的 CSV 上載到 GitHub。
-- `users.example.csv` 只是一個學生帳戶範本。
+- `users.example.csv` 只是一個學生帳戶格式範本。
 - 本平台只設學生登入，不建立教師帳戶。
-- `users.generated.csv` 已加入 `.gitignore`，請只留在自己的電腦內使用。
+- 真正的學生 ID 和密碼資料應只存在 Firebase Authentication 及 Firestore `users/{uid}` 角色文件。
 
 ## CSV 欄位
 
@@ -20,78 +30,71 @@
 | email | 可留空；系統會自動用 `scysps.C01.S0001@students.readingrun.invalid` |
 | pin | 學生登入密碼，最少 6 位 |
 | active | `true` 或 `false` |
-| className | 只方便老師查看，匯入時不會影響登入 |
 
-## 方法一：自動產生全校學生 ID 和密碼
+## Firebase 內需要有兩部分資料
 
-預設會產生 17 班，每班 26 個學生，即 442 個學生帳戶：
+### 1. Firebase Authentication
+
+每個學生都要有一個 Email/Password 帳戶。
+
+例子：
+
+```text
+學生登入畫面：1A + S0001 + 123456
+Firebase Auth email：scysps.C01.S0001@students.readingrun.invalid
+Firebase Auth password：123456
+```
+
+### 2. Firestore users/{uid}
+
+每個 Firebase Auth 使用者 UID 都要有一個對應的 `users/{uid}` 文件：
+
+```text
+role: "student"
+classId: "C01"
+studentId: "S0001"
+active: true
+```
+
+如果 Firebase Auth 密碼正確，但 `users/{uid}` 的 `classId` 或 `studentId` 不吻合，學生仍然不能登入。
+
+## 用 CSV 匯入 Firebase
+
+1. 到 Firebase Console 下載 service account JSON。
+2. 把 JSON 放在本資料夾，命名為 `service-account.json`。
+3. 用 Excel 製作 `users.csv`，格式參考 `users.example.csv`。
+4. 執行：
 
 ```bash
 cd admin-tools
 npm install
-npm run generate-users
+npm run import-users -- users.csv
 ```
 
-完成後會產生：
-
-```text
-admin-tools/users.generated.csv
-```
-
-預設 ID 例子：
-
-```text
-1A：S0001 至 S0026
-1B：S0001 至 S0026
-2A：S0001 至 S0026
-...
-6C：S0001 至 S0026
-```
-
-每個學生會自動產生 8 位隨機登入密碼。
-
-如要每班 30 人：
-
-```bash
-STUDENTS_PER_CLASS=30 npm run generate-users
-```
-
-如要 6 位密碼：
-
-```bash
-PIN_LENGTH=6 npm run generate-users
-```
-
-如要改 school code：
-
-```bash
-READING_RUN_SCHOOL_CODE=scysps npm run generate-users
-```
-
-## 匯入 Firebase
-
-1. 到 Firebase Console 下載 service account JSON。
-2. 把 JSON 放在本資料夾，命名為 `service-account.json`。
-3. 執行：
-
-```bash
-npm run import-users -- users.generated.csv
-```
-
-匯入後，學生可在登入頁選班別，例如 `1A`，學生 ID 填 `S0001`，登入密碼填 CSV 裏的 `pin`。
-
-## 方法二：手動製作 users.csv
-
-你也可以用 Excel 自己製作 `users.csv`，格式參考 `users.example.csv`：
+## CSV 例子
 
 ```csv
 role,classId,studentId,email,pin,active
-student,C01,S0001,,CHANGE_TO_UNIQUE_PASSWORD,true
-student,C01,S0002,,CHANGE_TO_UNIQUE_PASSWORD,true
+student,C01,S0001,,123456,true
+student,C01,S0002,,234567,true
 ```
 
-然後匯入：
+匯入後，學生可在 GitHub Pages 登入頁選 `1A`，學生 ID 填 `S0001`，登入密碼填 `123456`。
 
-```bash
-npm run import-users -- users.csv
+## 不使用 CSV 時的手動建立方法
+
+你也可以在 Firebase Console 手動建立：
+
+1. Authentication → Users → Add user
+2. Email 填：`scysps.C01.S0001@students.readingrun.invalid`
+3. Password 填學生密碼，例如：`123456`
+4. 複製該學生的 Firebase UID
+5. Firestore → `users/{uid}` 建立同 UID 文件
+6. 加入：
+
+```text
+role: "student"
+classId: "C01"
+studentId: "S0001"
+active: true
 ```
