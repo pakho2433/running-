@@ -18,6 +18,7 @@ loadStyle("country-landmarks-secure", "./country-landmarks-3d.css?v=20260709-stu
 
 import("./daily-book-recommendation-secure.js?v=20260709-student-only-1").catch(console.error);
 import("./country-landmarks-3d.js?v=20260709-student-only-1").catch(console.error);
+import("./world-runway-audio.js?v=20260710-world-audio-1").catch(console.error);
 
 const buttons = document.querySelector("#locationButtons");
 const label = document.querySelector("#currentLocationLabel");
