@@ -5,7 +5,7 @@
 ## 重要安全事項
 
 - 不要把 `service-account.json` 上載到 GitHub。
-- 不要把正式學生 PIN 的 CSV 上載到 GitHub。
+- 不要把正式學生密碼的 CSV 上載到 GitHub。
 - `users.example.csv` 只是一個範本。
 
 ## CSV 欄位
@@ -43,8 +43,8 @@ CSV：
 
 ```csv
 role,classId,studentId,email,pin,active
-student,C01,S0001,,CHANGE_TO_UNIQUE_PIN,true
+student,C01,S0001,,CHANGE_TO_UNIQUE_PASSWORD,true
 teacher,,,teacher@example.edu.hk,CHANGE_TO_STRONG_PASSWORD,true
 ```
 
-學生登入時選 1A，學生 ID 填 `S0001`，PIN 填 CSV 裏的 `pin`。
+學生登入時選 1A，學生 ID 填 `S0001`，登入密碼填 CSV 裏的 `pin`。
