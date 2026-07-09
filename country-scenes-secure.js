@@ -11,15 +11,13 @@ const SCENES = [
   ["意大利", "🇮🇹", "🏛️  🍕", "羅馬競技場", "#a9e1ff", "#84c77d"],
 ].map(([country, flag, landmark, caption, sky, ground]) => ({ country, flag, landmark, caption, sky, ground }));
 
-loadStyle("device-layout-secure", "./device-layout.css?v=20260706-secure-1");
-loadScript("device-layout-secure", "./device-layout.js?v=20260706-secure-1");
-loadStyle("teacher-center-secure", "./teacher-center.css?v=20260706-secure-1");
-loadStyle("daily-recommendation-secure", "./daily-book-recommendation.css?v=20260706-secure-1");
-loadStyle("country-landmarks-secure", "./country-landmarks-3d.css?v=20260706-secure-1");
+loadStyle("device-layout-secure", "./device-layout.css?v=20260709-student-only-1");
+loadScript("device-layout-secure", "./device-layout.js?v=20260709-student-only-1");
+loadStyle("daily-recommendation-secure", "./daily-book-recommendation.css?v=20260709-student-only-1");
+loadStyle("country-landmarks-secure", "./country-landmarks-3d.css?v=20260709-student-only-1");
 
-import("./teacher-center-secure.js?v=20260706-secure-1").catch(console.error);
-import("./daily-book-recommendation-secure.js?v=20260706-secure-1").catch(console.error);
-import("./country-landmarks-3d.js?v=20260706-secure-1").catch(console.error);
+import("./daily-book-recommendation-secure.js?v=20260709-student-only-1").catch(console.error);
+import("./country-landmarks-3d.js?v=20260709-student-only-1").catch(console.error);
 
 const buttons = document.querySelector("#locationButtons");
 const label = document.querySelector("#currentLocationLabel");
