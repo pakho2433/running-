@@ -12,8 +12,17 @@ service cloud.firestore {
     function isStudent() {
       return signedIn()
         && profile().role == "student"
+        && profile().active != false
         && profile().classId is string
         && profile().studentId is string;
+    }
+
+    function isTeacher() {
+      return signedIn()
+        && request.auth.token.teacher == true
+        && request.auth.token.role == "teacher"
+        && profile().role == "teacher"
+        && profile().active != false;
     }
 
     function myStudentKey() {
@@ -161,20 +170,20 @@ service cloud.firestore {
     }
 
     match /students/{studentKey} {
-      allow read: if isStudent() && studentKey == myStudentKey();
+      allow read: if isTeacher() || (isStudent() && studentKey == myStudentKey());
       allow create: if validStudentCreate(request.resource.data, studentKey);
       allow update: if validStudentUpdate(studentKey);
       allow delete: if false;
     }
 
     match /publicStudents/{studentKey} {
-      allow read: if isStudent() && resource.data.classId == profile().classId;
+      allow read: if isTeacher() || (isStudent() && resource.data.classId == profile().classId);
       allow create, update: if validPublicStudent(request.resource.data, studentKey);
       allow delete: if false;
     }
 
     match /bookLogs/{logId} {
-      allow read: if isStudent() && resource.data.studentKey == myStudentKey();
+      allow read: if isTeacher() || (isStudent() && resource.data.studentKey == myStudentKey());
       allow create: if validBookLog(request.resource.data, logId);
       allow update, delete: if false;
     }
