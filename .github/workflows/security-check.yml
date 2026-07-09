@@ -1,0 +1,45 @@
+name: Security checks
+
+on:
+  push:
+    branches:
+      - security/harden-school-500-users
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check app-stage.js
+          node --check country-scenes.js
+          node --check reading-history.js
+          node --check secure-data-service.js
+          node --check secure-google-ui-app.js
+          node --check secure-ui-app.js
+          node --check secure-track.js
+          node --check teacher-center-secure.js
+          node --check teacher-app-check-shared.js
+          node --check daily-book-recommendation-secure.js
+          node --check reading-history-secure.js
+          node --check country-scenes-secure.js
+
+      - name: Validate Firestore rules with emulator
+        run: |
+          npx --yes firebase-tools@14 emulators:exec \
+            --only firestore \
+            --project demo-reading-run \
+            "echo Firestore rules loaded"

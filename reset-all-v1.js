@@ -1,5 +1,5 @@
 (() => {
-  const RESET_ID = "2026-07-03-full-reset-1";
+  const RESET_ID = "2026-07-06-security-reset-1";
   const MARKER_KEY = "reading-run-reset-id";
 
   const MOBILE_FIX_ID = "reading-run-mobile-map-fix";
@@ -7,7 +7,7 @@
     const link = document.createElement("link");
     link.id = MOBILE_FIX_ID;
     link.rel = "stylesheet";
-    link.href = "./mobile-map-fix.css?v=20260706-mobile-map-fix-1";
+    link.href = "./mobile-map-fix.css?v=20260706-security-reset-1";
     document.head.appendChild(link);
   }
 
@@ -22,12 +22,13 @@
     "reading-run-session-v1",
     "reading-run-demo-students-v1",
     "reading-run-pending-books-v1",
+    "readingrun-teacher-attempts-v1",
   ].forEach((key) => localStorage.removeItem(key));
-
+  sessionStorage.removeItem("readingrun-teacher-session-v1");
   localStorage.setItem(MARKER_KEY, RESET_ID);
 
-  // Best-effort removal of this app's cached Firestore database so old
-  // offline data cannot briefly reappear after the server-side reset.
+  // Remove legacy Firestore IndexedDB caches. The secure application does not
+  // enable persistent Firestore storage on shared student devices.
   if (typeof indexedDB?.databases === "function") {
     indexedDB.databases().then((databases) => {
       databases

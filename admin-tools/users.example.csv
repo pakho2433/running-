@@ -1,0 +1,4 @@
+role,classId,studentId,email,pin,active
+student,C01,S0001,,CHANGE_TO_UNIQUE_PIN,true
+student,C01,S0002,,CHANGE_TO_UNIQUE_PIN,true
+teacher,,,teacher@example.edu.hk,CHANGE_TO_STRONG_PASSWORD,true

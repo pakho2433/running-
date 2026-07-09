@@ -4,19 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#596dff" />
-  <meta name="description" content="以閱讀推動班際跑步進度的 3D 校園閱讀平台" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>閱讀跑道 Reading Run</title>
-  <link rel="preconnect" href="https://www.gstatic.com" />
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-  <link rel="stylesheet" href="./styles.css?v=20260703-stage-fix-1" />
-  <link rel="stylesheet" href="./stage-fix.css?v=20260703-stage-fix-1" />
-  <link rel="stylesheet" href="./colorful-theme.css?v=20260703-colour-map-1" />
-  <link rel="stylesheet" href="./map-controls.css?v=20260703-book-exit-1" />
-  <link rel="stylesheet" href="./book-mascot.css?v=20260703-book-exit-1" />
-  <link rel="stylesheet" href="./country-history.css?v=20260703-country-history-1" />
+  <title>閱讀跑道 Reading Run｜Google 登入測試版</title>
+  <link rel="stylesheet" href="./styles.css?v=20260709-google-auto-2" />
+  <link rel="stylesheet" href="./stage-fix.css?v=20260709-google-auto-2" />
+  <link rel="stylesheet" href="./colorful-theme.css?v=20260709-google-auto-2" />
+  <link rel="stylesheet" href="./map-controls.css?v=20260709-google-auto-2" />
+  <link rel="stylesheet" href="./book-mascot.css?v=20260709-google-auto-2" />
+  <link rel="stylesheet" href="./country-history.css?v=20260709-google-auto-2" />
+  <link rel="stylesheet" href="./teacher-center.css?v=20260709-google-auto-2" />
+  <link rel="stylesheet" href="./daily-book-recommendation.css?v=20260709-google-auto-2" />
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -24,262 +23,50 @@
       <div class="brand-mark" aria-hidden="true">🏃📚</div>
       <p class="eyebrow">READING RUN</p>
       <h1 id="loginTitle">登入閱讀跑道</h1>
-      <p class="login-intro">輸入課室及學生 ID。為保障學生資料，每次開啟或重新整理網頁均須重新登入。</p>
-
+      <p class="login-intro">請使用 @twghscysps.edu.hk 學校 Google 帳戶登入。</p>
       <form id="loginForm" class="login-form">
-        <label>
-          <span>課室</span>
-          <select id="loginClass" required></select>
-        </label>
-        <label>
-          <span>學生 ID</span>
-          <input id="studentId" type="text" inputmode="text" maxlength="20" autocomplete="off" placeholder="例如：S0123" required />
-        </label>
-        <button id="loginButton" class="primary-button" type="submit">進入跑道</button>
+        <button id="loginButton" class="primary-button" type="submit">使用學校 Google 登入</button>
       </form>
-
       <div id="loginMessage" class="form-message" role="status"></div>
-      <p class="privacy-note">請勿使用學生全名作為 ID。教師可在設定檔修改 17 個課室名稱。</p>
+      <p class="privacy-note">系統會按 Google 帳戶自動讀取你的班別和學生 ID。</p>
     </section>
   </div>
 
   <div id="appShell" class="app-shell is-hidden">
     <header class="topbar">
-      <div>
-        <p class="eyebrow">READING RUN</p>
-        <h1 id="schoolTitle">全校閱讀跑道</h1>
-      </div>
-      <div class="topbar-actions">
-        <span id="syncStatus" class="sync-status" data-state="idle">● 等待登入</span>
-        <button id="logoutButton" class="ghost-button" type="button">登出</button>
-      </div>
+      <div><p class="eyebrow">READING RUN</p><h1 id="schoolTitle">全校閱讀跑道</h1></div>
+      <div class="topbar-actions"><span id="syncStatus" class="sync-status" data-state="idle">● 等待學校 Google 登入</span><button id="logoutButton" class="ghost-button" type="button">登出</button></div>
     </header>
-
     <main class="main-layout">
       <aside class="sidebar">
-        <section class="student-panel">
-          <div class="student-avatar" aria-hidden="true">🏃</div>
-          <div>
-            <p class="panel-label">目前學生</p>
-            <strong id="currentStudentLabel">—</strong>
-            <span id="currentClassLabel">—</span>
-          </div>
-        </section>
-
+        <section class="student-panel"><div class="student-avatar" aria-hidden="true">🏃</div><div><p class="panel-label">目前學生</p><strong id="currentStudentLabel">—</strong><span id="currentClassLabel">—</span></div></section>
         <form id="bookForm" class="book-form">
-          <div class="book-form-heading">
-            <label for="bookTitle">新增閱讀紀錄</label>
-            <span>最高 120 里</span>
-          </div>
-
+          <div class="book-form-heading"><label for="bookTitle">新增閱讀紀錄</label><span>最高 120 里</span></div>
           <div class="book-fields">
-            <label>
-              <span>回應一：日期</span>
-              <input id="readingDate" type="date" />
-            </label>
-            <label>
-              <span>回應二：書本名稱 <em>必填</em></span>
-              <input id="bookTitle" type="text" maxlength="80" placeholder="輸入書本名稱" required />
-            </label>
-            <label>
-              <span>回應三：作者名稱 <em>必填</em></span>
-              <input id="bookAuthor" type="text" maxlength="80" placeholder="輸入作者名稱" required />
-            </label>
-            <label>
-              <span>回應四：屬於哪一種讀物？</span>
-              <select id="readingType">
-                <option value="">未選擇（不加里數）</option>
-                <option value="小說">小說</option>
-                <option value="漫畫">漫畫</option>
-                <option value="新聞">新聞</option>
-                <option value="政府公告">政府公告</option>
-                <option value="政府短片">政府短片</option>
-              </select>
-            </label>
-            <label>
-              <span>回應五：屬於哪一個科目？</span>
-              <select id="bookSubject">
-                <option value="">未選擇（不加里數）</option>
-                <option value="中文">中文</option>
-                <option value="英文">英文</option>
-                <option value="數學">數學</option>
-                <option value="科學">科學</option>
-                <option value="人文">人文</option>
-                <option value="百科">百科</option>
-              </select>
-            </label>
-            <label>
-              <span>回應六：是否閱讀完成？</span>
-              <select id="readingCompleted">
-                <option value="">未選擇（不加里數）</option>
-                <option value="yes">是（加 50 里）</option>
-                <option value="">否（不加里數）</option>
-              </select>
-            </label>
+            <label><span>回應一：日期</span><input id="readingDate" type="date" /></label>
+            <label><span>回應二：書本名稱 <em>必填</em></span><input id="bookTitle" type="text" maxlength="80" placeholder="輸入書本名稱" required /></label>
+            <label><span>回應三：作者名稱 <em>必填</em></span><input id="bookAuthor" type="text" maxlength="80" placeholder="輸入作者名稱" required /></label>
+            <label><span>回應四：屬於哪一種讀物？</span><select id="readingType"><option value="">未選擇（不加里數）</option><option value="小說">小說</option><option value="漫畫">漫畫</option><option value="新聞">新聞</option><option value="政府公告">政府公告</option><option value="政府短片">政府短片</option></select></label>
+            <label><span>回應五：屬於哪一個科目？</span><select id="bookSubject"><option value="">未選擇（不加里數）</option><option value="中文">中文</option><option value="英文">英文</option><option value="數學">數學</option><option value="科學">科學</option><option value="人文">人文</option><option value="百科">百科</option></select></label>
+            <label><span>回應六：是否閱讀完成？</span><select id="readingCompleted"><option value="">未選擇（不加里數）</option><option value="yes">是（加 50 里）</option><option value="">否（不加里數）</option></select></label>
           </div>
-
-          <div class="score-preview" aria-live="polite">
-            <span>本次可獲</span>
-            <strong id="scorePreview">0</strong>
-            <small>里</small>
-          </div>
-          <p>書名＋作者＝10 里；讀物類別＋30；科目＋30；只有選「是」才加 50 里，選「否」不加。</p>
+          <div class="score-preview" aria-live="polite"><span>本次可獲</span><strong id="scorePreview">0</strong><small>里</small></div>
+          <p>書名＋作者＝10 里；讀物類別＋30；科目＋30；完成閱讀＋50。</p>
           <button class="primary-button submit-reading-button" type="submit">提交閱讀紀錄</button>
         </form>
-
-        <section class="my-progress-card">
-          <div>
-            <span>已閱讀</span>
-            <strong id="myBooksCount">0</strong>
-            <small>本書</small>
-          </div>
-          <div>
-            <span>跑步距離</span>
-            <strong id="myDistance">0</strong>
-            <small>里</small>
-          </div>
-        </section>
-
-        <section class="recent-book-card">
-          <span>最近一本</span>
-          <strong id="myLastBook">尚未提交</strong>
-        </section>
-
-        <section class="book-mascot-panel" aria-label="Reading Buddy 閱讀歷史">
-          <button id="readingBuddyButton" class="reading-buddy-button" type="button" aria-haspopup="dialog" aria-controls="readingHistoryModal">
-            <span>📚 READING BUDDY</span>
-            <small>查看閱讀歷史</small>
-          </button>
-          <div class="book-mascot-stage" aria-hidden="true">
-            <span class="book-sparkle one"></span>
-            <span class="book-sparkle two"></span>
-            <span class="book-sparkle three"></span>
-            <span class="book-shadow"></span>
-            <div class="book-character">
-              <span class="book-pages"></span>
-              <span class="book-page-flap"></span>
-              <span class="book-arm left"></span>
-              <span class="book-arm right"></span>
-              <span class="book-leg left"></span>
-              <span class="book-leg right"></span>
-              <span class="book-cover"></span>
-              <span class="book-face">
-                <span class="book-eye left"></span>
-                <span class="book-eye right"></span>
-                <span class="book-cheek left"></span>
-                <span class="book-cheek right"></span>
-                <span class="book-mouth"></span>
-              </span>
-            </div>
-          </div>
-          <span class="book-mascot-bubble">按我查看以往讀過的書！</span>
-        </section>
+        <section class="my-progress-card"><div><span>已閱讀</span><strong id="myBooksCount">0</strong><small>本書</small></div><div><span>跑步距離</span><strong id="myDistance">0</strong><small>里</small></div></section>
+        <section class="recent-book-card"><span>最近一本</span><strong id="myLastBook">尚未提交</strong></section>
+        <section class="book-mascot-panel" aria-label="Reading Buddy 閱讀歷史"><button id="readingBuddyButton" class="reading-buddy-button" type="button" aria-haspopup="dialog" aria-controls="readingHistoryModal"><span>📚 READING BUDDY</span><small>查看閱讀歷史</small></button><div class="book-mascot-stage" aria-hidden="true"></div><span class="book-mascot-bubble">按我查看以往讀過的書！</span></section>
       </aside>
-
       <section class="content-area">
-        <section class="overview-section" aria-labelledby="overviewTitle">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">17 CLASSROOMS</p>
-              <h2 id="overviewTitle">全校課室狀況</h2>
-            </div>
-            <p>按課室可查看最多 26 名學生在 15,000 里跑道上的即時位置。</p>
-          </div>
-          <div id="classroomGrid" class="classroom-grid"></div>
-        </section>
-
-        <section class="track-section" aria-labelledby="trackTitle">
-          <div class="section-heading track-heading">
-            <div>
-              <p class="eyebrow">LIVE 3D TRACK · 15,000 里</p>
-              <h2 id="trackTitle">課室跑道</h2>
-            </div>
-            <div class="track-stats">
-              <span><strong id="trackRunnerCount">0</strong> / 26 人</span>
-              <span>最前：<strong id="trackLeader">—</strong></span>
-            </div>
-          </div>
-
-          <section class="location-panel" aria-labelledby="locationPanelTitle">
-            <div class="location-panel-heading">
-              <div>
-                <p class="eyebrow">10 COUNTRIES</p>
-                <h3 id="locationPanelTitle">環遊世界閱讀跑道</h3>
-              </div>
-              <span id="currentLocationLabel">地方 1 · 0–1,500 里</span>
-            </div>
-            <div id="locationButtons" class="location-buttons"></div>
-          </section>
-
-          <div class="track-range-bar">
-            <span>正在觀看</span>
-            <strong id="trackRange">0–1,500 里</strong>
-          </div>
-
-          <div class="track-shell">
-            <button id="mapExitButton" class="map-exit-button" type="button" aria-hidden="true">✕ 退出全屏</button>
-            <div class="map-control-bar" aria-label="地圖視角控制">
-              <button id="mapExpandButton" class="map-control-button" type="button" aria-pressed="false">⛶ 放大地圖</button>
-              <button id="firstPersonButton" class="map-control-button" type="button" aria-pressed="false">👁 第一身</button>
-              <button id="orbitViewButton" class="map-control-button" type="button" aria-pressed="false">↻ 360° 自由觀看</button>
-              <button id="resetViewButton" class="map-control-button" type="button">⌂ 重設視角</button>
-            </div>
-            <div id="trackCanvas" class="track-canvas" aria-label="3D 學生跑道"></div>
-            <p id="mapViewHint" class="map-view-hint">按「第一身」跟隨自己；按「360°」後拖曳旋轉，滾輪或雙指縮放。</p>
-            <div id="trackEmpty" class="track-empty">這個位置暫時未有學生。</div>
-          </div>
-
-          <section class="leaderboard-section" aria-labelledby="leaderboardTitle">
-            <div class="leaderboard-heading">
-              <div>
-                <p class="eyebrow">TOP 5</p>
-                <h3 id="leaderboardTitle">班級閱讀里數龍虎榜</h3>
-              </div>
-              <span id="leaderboardClass">—</span>
-            </div>
-            <ol id="leaderboardList" class="leaderboard-list"></ol>
-          </section>
-
-          <div id="runnerList" class="runner-list" aria-live="polite"></div>
-        </section>
+        <section class="overview-section" aria-labelledby="overviewTitle"><div class="section-heading"><div><p class="eyebrow">YOUR CLASS</p><h2 id="overviewTitle">班級閱讀狀況</h2></div><p>學生只會下載自己班別的公開排行榜資料。</p></div><div id="classroomGrid" class="classroom-grid"></div></section>
+        <section class="track-section" aria-labelledby="trackTitle"><div class="section-heading track-heading"><div><p class="eyebrow">LIVE 3D TRACK · 15,000 里</p><h2 id="trackTitle">課室跑道</h2></div><div class="track-stats"><span><strong id="trackRunnerCount">0</strong> / 26 人</span><span>最前：<strong id="trackLeader">—</strong></span></div></div><section class="location-panel" aria-labelledby="locationPanelTitle"><div class="location-panel-heading"><div><p class="eyebrow">10 COUNTRIES</p><h3 id="locationPanelTitle">環遊世界閱讀跑道</h3></div><span id="currentLocationLabel">地方 1 · 0–1,500 里</span></div><div id="locationButtons" class="location-buttons"></div></section><div class="track-range-bar"><span>正在觀看</span><strong id="trackRange">0–1,500 里</strong></div><div class="track-shell"><button id="mapExitButton" class="map-exit-button" type="button" aria-hidden="true">✕ 退出全屏</button><div class="map-control-bar" aria-label="地圖視角控制"><button id="mapExpandButton" class="map-control-button" type="button" aria-pressed="false">⛶ 放大地圖</button><button id="firstPersonButton" class="map-control-button" type="button" aria-pressed="false">👁 第一身</button><button id="orbitViewButton" class="map-control-button" type="button" aria-pressed="false">↻ 360° 自由觀看</button><button id="resetViewButton" class="map-control-button" type="button">⌂ 重設視角</button></div><div id="trackCanvas" class="track-canvas" aria-label="3D 學生跑道"></div><p id="mapViewHint" class="map-view-hint">按「第一身」跟隨自己；按「360°」後拖曳旋轉。</p><div id="trackEmpty" class="track-empty">這個位置暫時未有學生。</div></div><section class="leaderboard-section" aria-labelledby="leaderboardTitle"><div class="leaderboard-heading"><div><p class="eyebrow">TOP 5</p><h3 id="leaderboardTitle">班級閱讀里數龍虎榜</h3></div><span id="leaderboardClass">—</span></div><ol id="leaderboardList" class="leaderboard-list"></ol></section><div id="runnerList" class="runner-list" aria-live="polite"></div></section>
       </section>
     </main>
   </div>
 
-  <div id="readingHistoryModal" class="history-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="readingHistoryTitle">
-    <section class="history-dialog">
-      <header class="history-dialog-header">
-        <div>
-          <p class="eyebrow">READING BUDDY</p>
-          <h2 id="readingHistoryTitle">我的閱讀歷史</h2>
-          <p>查看曾經閱讀的書本、作者及獲得里數。</p>
-        </div>
-        <button id="readingHistoryClose" class="history-close-button" type="button" aria-label="關閉閱讀歷史">✕</button>
-      </header>
-      <div class="history-summary-bar">
-        <strong id="readingHistorySummary"></strong>
-        <span id="readingHistoryStatus" role="status">按 Reading Buddy 載入紀錄。</span>
-      </div>
-      <div id="readingHistoryList" class="history-list"></div>
-    </section>
-  </div>
-
+  <div id="readingHistoryModal" class="history-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="readingHistoryTitle"><section class="history-dialog"><header class="history-dialog-header"><div><p class="eyebrow">READING BUDDY</p><h2 id="readingHistoryTitle">我的閱讀歷史</h2><p>只有本人及獲授權教師可以查看。</p></div><button id="readingHistoryClose" class="history-close-button" type="button" aria-label="關閉閱讀歷史">✕</button></header><div class="history-summary-bar"><strong id="readingHistorySummary"></strong><span id="readingHistoryStatus" role="status">按 Reading Buddy 載入紀錄。</span></div><div id="readingHistoryList" class="history-list"></div></section></div>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-
-  <script src="./reset-all-v1.js?v=20260703-full-reset-1"></script>
-  <script src="./require-login.js?v=20260703-colour-map-1"></script>
-  <script type="importmap">
-    {
-      "imports": {
-        "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js": "./three-reading-wrapper.js?v=20260703-colour-map-1",
-        "./app-config.js": "./app-config.js?v=20260703-score-map-fix-2",
-        "./firebase-config.js": "./firebase-config-v3.js"
-      }
-    }
-  </script>
-  <script type="module" src="./map-controls.js?v=20260703-book-exit-1"></script>
-  <script type="module" src="./app-stage.js?v=20260703-colour-map-1"></script>
-  <script type="module" src="./country-scenes.js?v=20260703-country-history-1"></script>
-  <script type="module" src="./reading-history.js?v=20260703-country-history-1"></script>
+  <script src="./reset-all-v1.js?v=20260709-google-auto-2"></script><script src="./require-login.js?v=20260709-google-auto-2"></script><script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js": "./three-reading-wrapper.js?v=20260709-google-auto-2", "./app-config.js": "./app-config.js?v=20260709-google-auto-2", "./firebase-config.js": "./firebase-config-v3.js?v=20260709-google-auto-2" } }</script><script type="module" src="./map-controls.js?v=20260709-google-auto-2"></script><script type="module" src="./app-stage.js?v=20260709-google-auto-2"></script><script type="module" src="./teacher-center-secure.js?v=20260709-google-auto-2"></script><script type="module" src="./country-scenes.js?v=20260709-google-auto-2"></script><script type="module" src="./reading-history.js?v=20260709-google-auto-2"></script>
 </body>
 </html>
