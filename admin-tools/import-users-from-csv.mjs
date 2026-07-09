@@ -30,14 +30,12 @@ for (const [index, row] of rows.entries()) {
     const studentId = normalise(row.studentId).toUpperCase();
     const active = String(row.active ?? "true").trim().toLowerCase() !== "false";
     const password = String(row.pin || row.password || "").trim();
-    const email = role === "student"
-      ? String(row.email || `${schoolCode}.${classId}.${studentId}@students.readingrun.invalid`).trim().toLowerCase()
-      : String(row.email || "").trim().toLowerCase();
+    const email = String(row.email || `${schoolCode}.${classId}.${studentId}@students.readingrun.invalid`).trim().toLowerCase();
 
-    if (!["student", "teacher"].includes(role)) throw new Error("role must be student or teacher");
+    if (role !== "student") throw new Error("role must be student; teacher accounts are not used");
+    if (!classId || !studentId) throw new Error("student requires classId and studentId");
     if (!email) throw new Error("email is required");
     if (password.length < 6) throw new Error("pin/password must be at least 6 characters");
-    if (role === "student" && (!classId || !studentId)) throw new Error("student requires classId and studentId");
 
     let userRecord;
     let action = "updated";
@@ -47,50 +45,48 @@ for (const [index, row] of rows.entries()) {
       summary.updated += 1;
     } catch (error) {
       if (error?.code !== "auth/user-not-found") throw error;
-      userRecord = await auth.createUser({ email, password, emailVerified: role === "student", disabled: !active });
+      userRecord = await auth.createUser({ email, password, emailVerified: true, disabled: !active });
       action = "created";
       summary.created += 1;
     }
 
     await db.doc(`users/${userRecord.uid}`).set({
-      role,
-      classId: role === "student" ? classId : "",
-      studentId: role === "student" ? studentId : "",
+      role: "student",
+      classId,
+      studentId,
       email,
       active,
       updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
 
-    if (role === "student") {
-      const studentKey = `${classId}__${studentId}`;
-      const studentRef = db.doc(`students/${studentKey}`);
-      const publicRef = db.doc(`publicStudents/${studentKey}`);
-      const existing = await studentRef.get();
-      if (!existing.exists) {
-        await studentRef.set({
-          classId,
-          studentId,
-          booksCount: 0,
-          distance: 0,
-          lastBook: "",
-          lastAuthor: "",
-          dailyBooksCount: 0,
-          dailyDateKey: "",
-          createdAt: FieldValue.serverTimestamp(),
-          updatedAt: FieldValue.serverTimestamp(),
-        });
-      }
-      const data = existing.exists ? existing.data() : { booksCount: 0, distance: 0 };
-      await publicRef.set({
+    const studentKey = `${classId}__${studentId}`;
+    const studentRef = db.doc(`students/${studentKey}`);
+    const publicRef = db.doc(`publicStudents/${studentKey}`);
+    const existing = await studentRef.get();
+    if (!existing.exists) {
+      await studentRef.set({
         classId,
         studentId,
-        booksCount: Number(data.booksCount || 0),
-        distance: Number(data.distance || 0),
+        booksCount: 0,
+        distance: 0,
+        lastBook: "",
+        lastAuthor: "",
+        dailyBooksCount: 0,
+        dailyDateKey: "",
+        createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
-      }, { merge: true });
+      });
     }
+    const data = existing.exists ? existing.data() : { booksCount: 0, distance: 0 };
+    await publicRef.set({
+      classId,
+      studentId,
+      booksCount: Number(data.booksCount || 0),
+      distance: Number(data.distance || 0),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
 
-    console.log(`[${index + 1}/${rows.length}] ${action}: ${role} ${email}`);
+    console.log(`[${index + 1}/${rows.length}] ${action}: student ${email}`);
   } catch (error) {
     summary.failed += 1;
     console.error(`[${index + 1}/${rows.length}] failed: ${error.message}`);
