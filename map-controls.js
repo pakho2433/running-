@@ -21,6 +21,7 @@ const TABLET_TARGET = new Vector3(0, 1.8, -42);
 const tempPosition = new Vector3();
 const tempTarget = new Vector3();
 const tempDirection = new Vector3();
+let lastRendererPixelRatio = 0;
 
 const shell = document.querySelector(".track-shell");
 const canvasHost = document.querySelector("#trackCanvas");
@@ -189,8 +190,22 @@ function pointerDistance() {
 function updateCameraLoop() {
   const camera = window.__readingCamera;
   const scene = window.__readingScene;
+  const renderer = window.__readingRenderer;
   if (camera && scene) applyCamera(camera, scene);
+  if (renderer) ensureRendererQuality(renderer);
   requestAnimationFrame(updateCameraLoop);
+}
+
+function ensureRendererQuality(renderer) {
+  const targetPixelRatio = Math.min(window.devicePixelRatio || 1, 2.5);
+  if (Math.abs(targetPixelRatio - lastRendererPixelRatio) > 0.01) {
+    lastRendererPixelRatio = targetPixelRatio;
+    renderer.setPixelRatio?.(targetPixelRatio);
+    renderer.setSize?.(Math.max(1, canvasHost.clientWidth), Math.max(1, canvasHost.clientHeight), false);
+  }
+  if (renderer.outputColorSpace !== undefined && window.__readingThree?.SRGBColorSpace) {
+    renderer.outputColorSpace = window.__readingThree.SRGBColorSpace;
+  }
 }
 
 function applyCamera(camera, scene) {
@@ -306,6 +321,7 @@ function resizeRenderer() {
   const width = Math.max(1, canvasHost.clientWidth);
   const height = Math.max(1, canvasHost.clientHeight);
   const pixelRatio = Math.min(window.devicePixelRatio || 1, 2.5);
+  lastRendererPixelRatio = pixelRatio;
   renderer.setPixelRatio?.(pixelRatio);
   renderer.setSize(width, height, false);
   camera.aspect = width / height;
