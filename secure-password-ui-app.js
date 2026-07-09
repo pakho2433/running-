@@ -69,7 +69,7 @@ async function handleLogin(event) {
     await enter(user, false);
   } catch (error) {
     console.error("Student password login failed", error);
-    loginMessage(loginError(error), true);
+    loginMessage(loginError(error, password), true);
   } finally {
     loginBusy(false);
   }
@@ -240,7 +240,7 @@ function showLogin() { dom.appShell?.classList.add("is-hidden"); dom.loginScreen
 function loginBusy(value) { [dom.loginClass, dom.studentId, dom.loginPassword, dom.loginButton].forEach((item) => { if (item) item.disabled = value; }); }
 function loginMessage(text, error = false) { if (dom.loginMessage) { dom.loginMessage.textContent = text; dom.loginMessage.dataset.state = error ? "error" : "loading"; } }
 function dataError(error) { console.error(error); sync("error", "● 權限或同步失敗"); toast("未能讀取資料，請重新登入。", true); }
-function loginError(error) { if (error?.message === "MISSING_LOGIN_FIELDS") return "請輸入課室、學生 ID 及最少 6 位密碼。"; if (error?.message === "PROFILE_MISMATCH") return "帳戶身份與學生 ID 或班別不符，請聯絡教師。"; if (error?.code === "auth/invalid-credential" || error?.code === "auth/wrong-password" || error?.code === "auth/user-not-found") return "學生 ID 或登入密碼不正確。"; if (error?.code === "auth/operation-not-allowed") return "Firebase 尚未啟用 Email/Password 登入。"; return "暫時未能登入，請檢查網絡或帳戶設定。"; }
+function loginError(error, enteredPassword = "") { if (error?.message === "MISSING_LOGIN_FIELDS") return "請輸入課室、學生 ID 及最少 6 位密碼。"; if (error?.message === "STUDENT_ID_NOT_FOUND" || error?.code === "auth/user-not-found") return "未有此 ID，請檢查班別及學生 ID。"; if (error?.message === "PASSWORD_INCORRECT" || error?.code === "auth/invalid-credential" || error?.code === "auth/wrong-password") return `Password 不正確，你輸入的是：${enteredPassword}`; if (error?.message === "PROFILE_MISMATCH") return "帳戶身份與學生 ID 或班別不符，請聯絡教師。"; if (error?.code === "auth/operation-not-allowed") return "Firebase 尚未啟用 Email/Password 登入。"; return "暫時未能登入，請檢查網絡或帳戶設定。"; }
 function locationFor(distance) { return Math.max(0, Math.min(LOCATION_COUNT - 1, Math.floor(Number(distance || 0) / STAGE_DISTANCE))); }
 function compare(a, b) { return Number(b.distance || 0) - Number(a.distance || 0) || Number(b.booksCount || 0) - Number(a.booksCount || 0); }
 function normalise(value, limit) { return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, limit); }
