@@ -1,6 +1,6 @@
 # Reading Run｜3D 全校閱讀跑道
 
-一個支援手機、平板及電腦的校園閱讀紀錄平台。安全版以 Firebase Authentication、學生個人 PIN、教師帳戶及角色式 Firestore Rules 保護學生資料。
+一個支援手機、平板及電腦的校園閱讀紀錄平台。現版本只提供學生登入，不設教師登入平台或教師數據中心。學生以 Firebase Authentication、學生個人 PIN 及 Firestore Rules 保護個人閱讀資料。
 
 ## 主要功能
 
@@ -9,8 +9,8 @@
 - 每班最多顯示 26 名 3D 跑步學生
 - 每人每日最多提交 5 本書
 - 手機、平板及桌面響應式介面
-- 教師安全數據中心及 Excel 匯出
-- 教師每日好書推介
+- 班級公開排行榜
+- 每日好書推介顯示
 - GitHub Pages 部署
 
 ## 安全架構
@@ -21,7 +21,7 @@
 students/{classId}__{studentId}
 ```
 
-只准該學生及教師讀取，包括最近閱讀書目、總本數及總里數。
+只准該學生本人讀取，包括最近閱讀書目、總本數及總里數。
 
 ### 班級公開排行榜
 
@@ -45,7 +45,7 @@ bookLogs/{studentKey}__{schoolDate}__{dailySequence}
 users/{firebaseUid}
 ```
 
-學生角色包含 `classId` 及 `studentId`；教師角色為 `teacher`。`users` 文件只能由受信任的管理環境建立，瀏覽器不可自行建立角色。
+現版本只使用 `student` 角色。`users` 文件只能由受信任的管理環境建立，瀏覽器不可自行建立角色。
 
 ## Firebase 必要設定
 
@@ -53,13 +53,12 @@ users/{firebaseUid}
 
 1. 啟用 Firebase Authentication 的 Email/Password。
 2. 為每名學生建立獨立帳戶及不同 PIN。
-3. 為教師建立學校電郵帳戶。
-4. 建立對應的 `users/{uid}` 角色文件。
-5. 部署 `firestore.rules`。
-6. 設定 `publicStudents` 排行榜文件。
-7. 在 `security-config.js` 加入 reCAPTCHA v3 site key。
-8. 測試後啟用 Firebase App Check Enforcement。
-9. 完成遷移後停用 Anonymous Authentication。
+3. 建立對應的 `users/{uid}` 學生角色文件。
+4. 部署 `firestore.rules`。
+5. 設定 `publicStudents` 排行榜文件。
+6. 在 `security-config.js` 加入 reCAPTCHA v3 site key。
+7. 測試後啟用 Firebase App Check Enforcement。
+8. 完成遷移後停用 Anonymous Authentication。
 
 完整步驟請閱讀 [`SECURITY_DEPLOYMENT.md`](./SECURITY_DEPLOYMENT.md)。
 
@@ -120,4 +119,4 @@ firebase deploy --only firestore:rules
 
 ## 上線狀態
 
-此安全修改應先在 staging Firebase 專案完成帳戶、角色、Rules、App Check 及負載測試，再合併到正式部署分支。
+此學生登入版應先在 staging Firebase 專案完成帳戶、角色、Rules、App Check 及負載測試，再合併到正式部署分支。
