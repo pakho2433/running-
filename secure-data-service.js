@@ -48,10 +48,8 @@ export async function loginStudent(classId, studentId, password) {
 
 async function ensureStudentAccountExists(email) {
   try {
-    const methods = await fetchSignInMethodsForEmail(auth, email);
-    if (!methods.length) throw new Error("STUDENT_ID_NOT_FOUND");
+    await fetchSignInMethodsForEmail(auth, email);
   } catch (error) {
-    if (error?.message === "STUDENT_ID_NOT_FOUND") throw error;
     console.warn("Unable to pre-check student ID, falling back to password sign-in.", error);
   }
 }
