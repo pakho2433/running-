@@ -1,6 +1,4 @@
 (() => {
-  // Hardened authentication is handled by secure-ui-app.js.
-  // This file now only adds a stable teacher-login entry on the cover page.
   const ready = () => {
     const loginCard = document.querySelector(".login-card");
     const loginForm = document.querySelector("#loginForm");
@@ -20,7 +18,7 @@
   async function openTeacherCenter() {
     try {
       if (!document.querySelector("#teacherCenterSecureModal")) {
-        await import("./teacher-center-secure.js?v=20260706-secure-login-4");
+        await import("./teacher-center-secure.js?v=20260709-password-login-1");
       }
       const modal = document.querySelector("#teacherCenterSecureModal");
       const loginView = modal?.querySelector(".teacher-login-view");
