@@ -29,32 +29,33 @@ export async function initialiseSecurity() {
   if (typeof auth.authStateReady === "function") await auth.authStateReady();
 }
 
-export async function loginStudent(classId, studentId) {
+export async function loginStudent() {
   await setPersistence(auth, browserSessionPersistence);
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ hd: HOSTED_DOMAIN, prompt: "select_account" });
   const credential = await signInWithPopup(auth, provider);
-  return authoriseStudent(credential.user.uid, classId, studentId);
+  return authoriseStudent(credential.user.uid);
 }
 
 export async function restoreStudent() {
-  const session = readSession();
-  if (!auth.currentUser || !session?.classId || !session?.studentId) return null;
-  return authoriseStudent(auth.currentUser.uid, session.classId, session.studentId);
+  if (!auth.currentUser) return null;
+  return authoriseStudent(auth.currentUser.uid);
 }
 
-async function authoriseStudent(uid, classId, studentId) {
+async function authoriseStudent(uid) {
   if (!isSchoolEmail(auth.currentUser?.email)) {
     await signOut(auth).catch(() => {});
     throw new Error("INVALID_DOMAIN");
   }
   const snapshot = await getDoc(doc(db, "users", uid));
   const profile = snapshot.data() || {};
+  const classId = String(profile.classId || "").toUpperCase();
+  const studentId = String(profile.studentId || "").toUpperCase();
   if (
     profile.role !== "student"
     || profile.active === false
-    || profile.classId !== classId
-    || String(profile.studentId || "").toUpperCase() !== studentId
+    || !classId
+    || !studentId
   ) {
     await signOut(auth).catch(() => {});
     throw new Error("PROFILE_MISMATCH");
@@ -202,9 +203,4 @@ export function schoolDateKey() {
 
 function isSchoolEmail(email) {
   return String(email || "").toLowerCase().endsWith(SCHOOL_DOMAIN);
-}
-
-function readSession() {
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); }
-  catch { return null; }
 }
