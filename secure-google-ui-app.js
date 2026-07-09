@@ -1,6 +1,5 @@
 import { APP_CONFIG } from "./app-config.js";
 import { initialiseSecurity, loginStudent, logoutStudent, restoreStudent, saveReading, schoolDateKey, scoreReading, subscribeStudent } from "./secure-data-service.js";
-import { SecureTrack } from "./secure-track.js";
 
 const $ = (selector) => document.querySelector(selector);
 const dom = {
@@ -10,29 +9,30 @@ const dom = {
 const STAGE_DISTANCE = Number(APP_CONFIG.stageDistance || 1500);
 const LOCATION_COUNT = Number(APP_CONFIG.trackLocations || 10);
 const state = { user: null, student: null, classmates: [], location: 0, saving: false };
-let track;
+let track = null;
+let trackLoadAttempted = false;
 
 start().catch((error) => {
-  console.error(error);
+  console.error("Reading Run start failed", error);
   showLogin();
   loginMessage("系統啟動失敗，請重新整理。", true);
 });
 
 async function start() {
   setupGoogleLoginUi();
-  track = new SecureTrack(dom.trackCanvas, STAGE_DISTANCE);
-  dom.schoolTitle.textContent = APP_CONFIG.schoolName;
-  dom.readingDate.value = schoolDateKey();
+  if (dom.schoolTitle) dom.schoolTitle.textContent = APP_CONFIG.schoolName;
+  if (dom.readingDate) dom.readingDate.value = schoolDateKey();
   bindEvents();
+  showLogin();
   await initialiseSecurity();
   try {
     const restored = await restoreStudent();
     if (restored) return enter(restored, true);
   } catch (error) {
-    console.warn(error);
+    console.warn("Restore Google login failed", error);
     await logoutStudent();
+    loginMessage(loginError(error), true);
   }
-  showLogin();
 }
 
 function setupGoogleLoginUi() {
@@ -43,15 +43,19 @@ function setupGoogleLoginUi() {
   if (intro) intro.textContent = "請使用 @twghscysps.edu.hk 學校 Google 帳戶登入。";
   const note = $(".privacy-note");
   if (note) note.textContent = "系統會按 Google 帳戶自動讀取你的班別和學生 ID。";
-  dom.loginButton.textContent = "使用學校 Google 登入";
+  if (dom.loginButton) dom.loginButton.textContent = "使用學校 Google 登入";
 }
 
 function bindEvents() {
-  dom.loginForm.addEventListener("submit", handleLogin);
-  dom.logoutButton.addEventListener("click", handleLogout);
-  dom.bookForm.addEventListener("input", updateScore);
-  dom.bookForm.addEventListener("change", updateScore);
-  dom.bookForm.addEventListener("submit", handleBook);
+  dom.loginForm?.addEventListener("submit", handleLogin);
+  dom.loginButton?.addEventListener("click", (event) => {
+    if (event.currentTarget.form) return;
+    handleLogin(event);
+  });
+  dom.logoutButton?.addEventListener("click", handleLogout);
+  dom.bookForm?.addEventListener("input", updateScore);
+  dom.bookForm?.addEventListener("change", updateScore);
+  dom.bookForm?.addEventListener("submit", handleBook);
 }
 
 async function handleLogin(event) {
@@ -63,7 +67,7 @@ async function handleLogin(event) {
     if (user) await enter(user, false);
     else loginMessage("正在前往 Google 登入頁面……");
   } catch (error) {
-    console.error(error);
+    console.error("Google redirect login failed", error);
     loginMessage(loginError(error), true);
     loginBusy(false);
   }
@@ -71,9 +75,10 @@ async function handleLogin(event) {
 
 async function enter(user, restored) {
   state.user = user;
-  dom.loginScreen.classList.add("is-hidden");
-  dom.appShell.classList.remove("is-hidden");
+  dom.loginScreen?.classList.add("is-hidden");
+  dom.appShell?.classList.remove("is-hidden");
   sync("saved", "● 已使用學校 Google 帳戶登入");
+  await ensureTrack();
   subscribeStudent(user, (student) => {
     state.student = student;
     state.location = locationFor(student?.distance || 0);
@@ -82,8 +87,23 @@ async function enter(user, restored) {
     state.classmates = classmates;
     render();
   }, dataError);
-  track.resize();
+  track?.resize?.();
   if (!restored) toast(`歡迎回來，${user.studentId}！`);
+}
+
+async function ensureTrack() {
+  if (track || trackLoadAttempted || !dom.trackCanvas) return;
+  trackLoadAttempted = true;
+  try {
+    const { SecureTrack } = await import("./secure-track.js?v=20260709-google-redirect-4");
+    track = new SecureTrack(dom.trackCanvas, STAGE_DISTANCE);
+  } catch (error) {
+    console.error("3D track failed to load, login remains available", error);
+    if (dom.trackEmpty) {
+      dom.trackEmpty.classList.remove("is-hidden");
+      dom.trackEmpty.textContent = "3D 跑道暫時未能載入，但仍可提交閱讀紀錄。";
+    }
+  }
 }
 
 async function handleLogout() {
@@ -101,7 +121,7 @@ async function handleBook(event) {
   const record = readRecord();
   if (!record.title || !record.author) return toast("請輸入書本名稱及作者名稱。", true);
   state.saving = true;
-  dom.bookSubmit.disabled = true;
+  if (dom.bookSubmit) dom.bookSubmit.disabled = true;
   sync("saving", "● 安全儲存中");
   try {
     const result = await saveReading(state.user, record);
@@ -114,7 +134,7 @@ async function handleBook(event) {
     toast(error?.message === "DAILY_LIMIT" ? "今日已達 5 本上限。" : "未能儲存，請稍後再試。", true);
   } finally {
     state.saving = false;
-    dom.bookSubmit.disabled = false;
+    if (dom.bookSubmit) dom.bookSubmit.disabled = false;
   }
 }
 
@@ -125,25 +145,26 @@ function render() {
   const visible = ranked.filter((item) => locationFor(item.distance) === state.location);
   const rangeStart = state.location * STAGE_DISTANCE;
   const rangeEnd = rangeStart + STAGE_DISTANCE;
-  dom.currentStudentLabel.textContent = state.user.studentId;
-  dom.currentClassLabel.textContent = roomName(state.user.classId);
-  dom.myBooksCount.textContent = number(student.booksCount);
-  dom.myDistance.textContent = number(student.distance);
-  dom.myLastBook.textContent = student.lastBook ? `《${student.lastBook}》${student.lastAuthor ? `｜${student.lastAuthor}` : ""}` : "尚未提交";
+  if (dom.currentStudentLabel) dom.currentStudentLabel.textContent = state.user.studentId;
+  if (dom.currentClassLabel) dom.currentClassLabel.textContent = roomName(state.user.classId);
+  if (dom.myBooksCount) dom.myBooksCount.textContent = number(student.booksCount);
+  if (dom.myDistance) dom.myDistance.textContent = number(student.distance);
+  if (dom.myLastBook) dom.myLastBook.textContent = student.lastBook ? `《${student.lastBook}》${student.lastAuthor ? `｜${student.lastAuthor}` : ""}` : "尚未提交";
   renderClassCard();
-  dom.trackTitle.textContent = `${roomName(state.user.classId)} 跑道`;
-  dom.trackRunnerCount.textContent = String(visible.length);
-  dom.trackLeader.textContent = ranked[0]?.studentId || "—";
-  dom.currentLocationLabel.textContent = `地方 ${state.location + 1} · ${number(rangeStart)}–${number(rangeEnd)} 里`;
-  dom.trackRange.textContent = `${number(rangeStart)}–${number(rangeEnd)} 里`;
-  dom.trackEmpty.classList.toggle("is-hidden", visible.length > 0);
+  if (dom.trackTitle) dom.trackTitle.textContent = `${roomName(state.user.classId)} 跑道`;
+  if (dom.trackRunnerCount) dom.trackRunnerCount.textContent = String(visible.length);
+  if (dom.trackLeader) dom.trackLeader.textContent = ranked[0]?.studentId || "—";
+  if (dom.currentLocationLabel) dom.currentLocationLabel.textContent = `地方 ${state.location + 1} · ${number(rangeStart)}–${number(rangeEnd)} 里`;
+  if (dom.trackRange) dom.trackRange.textContent = `${number(rangeStart)}–${number(rangeEnd)} 里`;
+  dom.trackEmpty?.classList.toggle("is-hidden", visible.length > 0 && Boolean(track));
   renderLocations(ranked);
   renderRanking(ranked.slice(0, 5));
   renderRunnerList(visible);
-  track.setStudents(visible, state.user.key, state.location);
+  track?.setStudents?.(visible, state.user.key, state.location);
 }
 
 function renderClassCard() {
+  if (!dom.classroomGrid) return;
   const total = state.classmates.reduce((sum, item) => sum + Number(item.distance || 0), 0);
   const classCard = document.createElement("button");
   classCard.type = "button";
@@ -153,6 +174,7 @@ function renderClassCard() {
 }
 
 function renderLocations(students) {
+  if (!dom.locationButtons) return;
   dom.locationButtons.replaceChildren(...Array.from({ length: LOCATION_COUNT }, (_, index) => {
     const start = index * STAGE_DISTANCE;
     const count = students.filter((item) => locationFor(item.distance) === index).length;
@@ -166,7 +188,8 @@ function renderLocations(students) {
 }
 
 function renderRanking(students) {
-  dom.leaderboardClass.textContent = roomName(state.user.classId);
+  if (!dom.leaderboardList) return;
+  if (dom.leaderboardClass) dom.leaderboardClass.textContent = roomName(state.user.classId);
   if (!students.length) {
     dom.leaderboardList.innerHTML = '<li class="leaderboard-empty">這個課室尚未有閱讀紀錄。</li>';
     return;
@@ -180,6 +203,7 @@ function renderRanking(students) {
 }
 
 function renderRunnerList(students) {
+  if (!dom.runnerList) return;
   dom.runnerList.replaceChildren(...students.map((student, index) => {
     const item = document.createElement("div");
     item.className = `runner-chip${student.id === state.user.key ? " is-me" : ""}`;
@@ -190,36 +214,36 @@ function renderRunnerList(students) {
 
 function readRecord() {
   return {
-    readingDate: dom.readingDate.value || schoolDateKey(),
-    title: clean(dom.bookTitle.value, 80),
-    author: clean(dom.bookAuthor.value, 80),
-    readingType: dom.readingType.value || "",
-    subject: dom.bookSubject.value || "",
-    completed: dom.readingCompleted.value || "",
+    readingDate: dom.readingDate?.value || schoolDateKey(),
+    title: clean(dom.bookTitle?.value, 80),
+    author: clean(dom.bookAuthor?.value, 80),
+    readingType: dom.readingType?.value || "",
+    subject: dom.bookSubject?.value || "",
+    completed: dom.readingCompleted?.value || "",
   };
 }
 
 function clearForm() {
-  dom.readingDate.value = schoolDateKey();
-  dom.bookTitle.value = "";
-  dom.bookAuthor.value = "";
-  dom.readingType.value = "";
-  dom.bookSubject.value = "";
-  dom.readingCompleted.value = "";
+  if (dom.readingDate) dom.readingDate.value = schoolDateKey();
+  if (dom.bookTitle) dom.bookTitle.value = "";
+  if (dom.bookAuthor) dom.bookAuthor.value = "";
+  if (dom.readingType) dom.readingType.value = "";
+  if (dom.bookSubject) dom.bookSubject.value = "";
+  if (dom.readingCompleted) dom.readingCompleted.value = "";
   updateScore();
 }
 
-function updateScore() { dom.scorePreview.textContent = String(scoreReading(readRecord())); }
-function showLogin() { dom.appShell.classList.add("is-hidden"); dom.loginScreen.classList.remove("is-hidden"); sync("idle", "● 等待學校 Google 登入"); }
+function updateScore() { if (dom.scorePreview) dom.scorePreview.textContent = String(scoreReading(readRecord())); }
+function showLogin() { dom.appShell?.classList.add("is-hidden"); dom.loginScreen?.classList.remove("is-hidden"); sync("idle", "● 等待學校 Google 登入"); }
 function loginBusy(value) { if (dom.loginButton) dom.loginButton.disabled = value; }
-function loginMessage(text, error = false) { dom.loginMessage.textContent = text; dom.loginMessage.dataset.state = error ? "error" : "loading"; }
+function loginMessage(text, error = false) { if (dom.loginMessage) { dom.loginMessage.textContent = text; dom.loginMessage.dataset.state = error ? "error" : "loading"; } }
 function dataError(error) { console.error(error); sync("error", "● 權限或同步失敗"); toast("未能讀取資料，請重新登入。", true); }
-function loginError(error) { if (error?.message === "INVALID_DOMAIN") return "請使用 @twghscysps.edu.hk 學校 Google 帳戶登入。"; if (error?.message === "PROFILE_MISMATCH") return "此 Google 帳戶未獲授權，或未設定學生身份。"; if (error?.code === "auth/unauthorized-domain") return "Firebase 未授權此網域，請在 Authentication Authorized domains 加入 pakho2433.github.io。"; return "暫時未能登入，請檢查 Google 帳戶及網絡。"; }
+function loginError(error) { if (error?.message === "INVALID_DOMAIN") return "請使用 @twghscysps.edu.hk 學校 Google 帳戶登入。"; if (error?.message === "PROFILE_MISMATCH") return "此 Google 帳戶未獲授權，或未設定學生身份。"; if (error?.code === "auth/unauthorized-domain") return "Firebase 未授權此網域，請在 Authentication Authorized domains 加入 pakho2433.github.io。"; if (error?.code === "auth/operation-not-allowed") return "Firebase 尚未啟用 Google 登入。"; return "暫時未能登入，請檢查 Google 帳戶及網絡。"; }
 function locationFor(distance) { return Math.max(0, Math.min(LOCATION_COUNT - 1, Math.floor(Number(distance || 0) / STAGE_DISTANCE))); }
 function compare(a, b) { return Number(b.distance || 0) - Number(a.distance || 0) || Number(b.booksCount || 0) - Number(a.booksCount || 0); }
 function clean(value, limit) { return String(value || "").trim().replace(/\s+/g, " ").slice(0, limit); }
 function roomName(id) { return APP_CONFIG.classrooms.find((room) => room.id === id)?.name || id; }
 function number(value) { return new Intl.NumberFormat("zh-HK").format(Number(value || 0)); }
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character])); }
-function sync(status, text) { dom.syncStatus.dataset.state = status; dom.syncStatus.textContent = text; }
-function toast(text, error = false) { const item = document.createElement("div"); item.className = `toast${error ? " error" : ""}`; item.textContent = text; dom.toastRegion.append(item); setTimeout(() => item.remove(), 4000); }
+function sync(status, text) { if (dom.syncStatus) { dom.syncStatus.dataset.state = status; dom.syncStatus.textContent = text; } }
+function toast(text, error = false) { if (!dom.toastRegion) return; const item = document.createElement("div"); item.className = `toast${error ? " error" : ""}`; item.textContent = text; dom.toastRegion.append(item); setTimeout(() => item.remove(), 4000); }
