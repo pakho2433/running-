@@ -90,14 +90,14 @@ body.map-expanded {
   overflow: hidden !important;
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1500px) {
   #appShell .main-layout {
     align-items: start !important;
     grid-template-columns: minmax(280px, 340px) minmax(0, 1fr) !important;
   }
 }
 
-@media (min-width: 821px) and (max-width: 1279px) {
+@media (min-width: 821px) and (max-width: 1499px) {
   #appShell .main-layout {
     grid-template-columns: minmax(0, 1fr) !important;
   }
@@ -134,7 +134,7 @@ body.map-expanded {
     min-height: min(560px, 64dvh) !important;
   }
 
-  @media (min-width: 821px) and (max-width: 1279px) {
+  @media (min-width: 821px) and (max-width: 1499px) {
     #appShell .track-shell:not(.is-map-expanded) {
       height: min(64dvh, 720px) !important;
       min-height: min(500px, 64dvh) !important;
