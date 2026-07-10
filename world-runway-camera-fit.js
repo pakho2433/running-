@@ -37,21 +37,21 @@ function applyResponsiveOverview(camera, renderer) {
   const aspect = width / height;
 
   if (aspect < 0.72) {
-    camera.position.set(0, 62, 118);
-    target.set(0, 2.2, -42);
-    camera.fov = 72;
+    camera.position.set(0, 42, 84);
+    target.set(0, 1.8, -44);
+    camera.fov = 60;
   } else if (aspect < 1.18) {
-    camera.position.set(0, 54, 104);
-    target.set(0, 2.0, -42);
-    camera.fov = 66;
+    camera.position.set(0, 36, 72);
+    target.set(0, 1.8, -43);
+    camera.fov = 55;
   } else if (aspect < 1.55) {
-    camera.position.set(0, 46, 94);
-    target.set(0, 2.0, -42);
-    camera.fov = 62;
+    camera.position.set(0, 31, 62);
+    target.set(0, 1.8, -42);
+    camera.fov = 51;
   } else {
-    camera.position.set(0, 38, 82);
-    target.set(0, 2.0, -42);
-    camera.fov = 58;
+    camera.position.set(0, 26, 50);
+    target.set(0, 1.7, -40);
+    camera.fov = 47;
   }
 
   camera.up.set(0, 1, 0);
