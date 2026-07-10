@@ -16,6 +16,7 @@ loadScript("device-layout-secure", "./device-layout.js?v=20260709-student-only-1
 loadStyle("daily-recommendation-secure", "./daily-book-recommendation.css?v=20260709-student-only-1");
 loadStyle("country-landmarks-secure", "./country-landmarks-3d.css?v=20260709-student-only-1");
 loadStyle("world-runway-responsive-fit", "./world-runway-responsive-fit.css?v=20260710-overflow-fix-1");
+loadStyle("world-runway-device-fit", "./world-runway-device-fit.css?v=20260711-map-fit-1");
 
 import("./daily-book-recommendation-secure.js?v=20260709-student-only-1").catch(console.error);
 import("./country-landmarks-3d.js?v=20260709-student-only-1").catch(console.error);
@@ -23,8 +24,9 @@ import("./world-runway-audio.js?v=20260710-world-audio-fix-2").catch(console.err
 import("./world-runway-layout-fix.js?v=20260710-layout-fix-1").catch(console.error);
 import("./world-runway-hotspot-fix.js?v=20260710-hotspot-panda-1").catch(console.error);
 import("./world-runway-panda-persistent.js?v=20260710-panda-persistent-1").catch(console.error);
-import("./world-runway-camera-fit.js?v=20260710-responsive-fit-1").catch(console.error);
+import("./world-runway-camera-fit.js?v=20260711-map-fit-1").catch(console.error);
 import("./world-runway-stable-interaction.js?v=20260710-responsive-fit-1").catch(console.error);
+import("./world-runway-interaction-bridge.js?v=20260711-map-fit-1").catch(console.error);
 
 const buttons = document.querySelector("#locationButtons");
 const label = document.querySelector("#currentLocationLabel");
