@@ -1,0 +1,160 @@
+/* Final safety layer: prevent desktop / tablet horizontal overflow. */
+html,
+body,
+#appShell,
+.app-shell {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: clip !important;
+}
+
+body {
+  position: relative;
+}
+
+.main-layout,
+.content-area,
+.sidebar,
+.overview-section,
+.track-section,
+.leaderboard-section,
+.location-panel,
+.track-shell,
+.runner-list,
+.leaderboard-list {
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.main-layout {
+  width: 100% !important;
+  max-width: 1280px !important;
+  margin-inline: auto !important;
+  padding-inline: clamp(12px, 2vw, 28px) !important;
+  overflow-x: hidden !important;
+}
+
+.content-area {
+  width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.track-section,
+.overview-section,
+.leaderboard-section {
+  overflow-x: hidden !important;
+}
+
+.track-shell {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.track-canvas,
+.track-canvas canvas {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.runner-list {
+  width: 100% !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)) !important;
+  overflow-x: hidden !important;
+}
+
+.runner-chip {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.runner-chip span,
+.runner-chip small,
+.leaderboard-student,
+.leaderboard-distance {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.location-buttons,
+.classroom-grid {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.location-card,
+.country-location-card,
+.classroom-card {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 1360px) and (min-width: 921px) {
+  .main-layout {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    max-width: 1180px !important;
+    padding-inline: 16px !important;
+  }
+
+  .sidebar {
+    position: static !important;
+    top: auto !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .student-panel,
+  .book-form {
+    grid-column: 1 / -1 !important;
+  }
+
+  .track-shell:not(.is-map-expanded) {
+    height: min(62vh, 680px) !important;
+    min-height: 460px !important;
+  }
+
+  .runner-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)) !important;
+  }
+}
+
+@media (max-width: 920px) {
+  .main-layout {
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding-inline: 12px !important;
+  }
+
+  .sidebar {
+    position: static !important;
+  }
+
+  .runner-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .main-layout {
+    padding-inline: 10px !important;
+  }
+
+  .runner-list {
+    grid-template-columns: 1fr !important;
+  }
+
+  .location-buttons,
+  .classroom-grid {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    overscroll-behavior-x: contain !important;
+  }
+}
+
+body .track-shell.is-map-expanded,
+body.map-expanded .track-shell.is-map-expanded {
+  max-width: 100vw !important;
+  overflow: hidden !important;
+}
