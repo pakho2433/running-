@@ -1,23 +1,50 @@
 html,
 body {
+  width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
+}
+
+body * {
+  box-sizing: border-box;
 }
 
 .app-shell,
 .main-layout,
+.sidebar,
 .content-area,
+.overview-section,
 .track-section,
+.leaderboard-section,
 .track-shell,
-.track-canvas {
-  box-sizing: border-box;
-  max-width: 100%;
+.track-canvas,
+.runner-list,
+.location-panel,
+.location-buttons {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.main-layout {
+  width: 100% !important;
+  max-width: 1440px !important;
+  overflow: hidden !important;
+}
+
+.content-area {
+  overflow: hidden !important;
+}
+
+.track-section,
+.overview-section,
+.leaderboard-section {
+  overflow: hidden !important;
 }
 
 .track-shell {
   width: 100% !important;
   aspect-ratio: 16 / 9;
-  height: clamp(440px, 52vw, 760px) !important;
+  height: clamp(420px, 48vw, 720px) !important;
   overflow: hidden !important;
 }
 
@@ -29,17 +56,96 @@ body {
   display: block !important;
 }
 
+.runner-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)) !important;
+  gap: 10px !important;
+  overflow: hidden !important;
+}
+
+.runner-chip {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.location-buttons,
+.classroom-grid {
+  overflow-x: hidden !important;
+}
+
 .world-audio-toast,
 .map-view-hint {
   max-width: calc(100% - 24px) !important;
   white-space: normal !important;
 }
 
+/* Laptop / narrow desktop: avoid sidebar + large map causing horizontal overflow. */
+@media (max-width: 1480px) {
+  body .main-layout {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 1180px !important;
+    padding-left: clamp(14px, 2.5vw, 34px) !important;
+    padding-right: clamp(14px, 2.5vw, 34px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  body .sidebar {
+    position: static !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: start !important;
+  }
+
+  body .student-panel,
+  body .book-form {
+    grid-column: 1 / -1 !important;
+  }
+
+  body .track-shell:not(.is-map-expanded) {
+    height: min(58svh, 680px) !important;
+    min-height: 420px !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+}
+
 @media (min-width: 821px) and (max-width: 1180px) {
+  body .main-layout {
+    max-width: 1000px !important;
+  }
+
   body .track-shell:not(.is-map-expanded) {
     height: min(56svh, 620px) !important;
-    min-height: 430px !important;
+    min-height: 410px !important;
     aspect-ratio: 4 / 3 !important;
+  }
+}
+
+@media (max-width: 920px) {
+  body .main-layout {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    overflow: hidden !important;
+  }
+
+  body .sidebar,
+  body .content-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    overflow: hidden !important;
+  }
+
+  body .student-panel,
+  body .book-form,
+  body .my-progress-card,
+  body .recent-book-card {
+    grid-column: auto !important;
   }
 }
 
@@ -66,9 +172,11 @@ body {
     right: 8px !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 7px !important;
+    overflow: hidden !important;
   }
 
   body .map-control-button {
+    min-width: 0 !important;
     min-height: 36px !important;
     padding: 0 8px !important;
     font-size: 11px !important;
