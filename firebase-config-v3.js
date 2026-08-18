@@ -1,10 +1,10 @@
-// Reading Run Firebase config — cache-busted deployment version.
+// Fail-closed source template. `npm run build` replaces this file in dist/
+// with configuration from the school-owned GitHub Environment.
 export const firebaseConfig = {
-  apiKey: "AIzaSyB2Drw3jtbvMuAtR_4KGN1J63_BU01ECO0",
-  authDomain: "book-running.firebaseapp.com",
-  projectId: "book-running",
-  storageBucket: "book-running.firebasestorage.app",
-  messagingSenderId: "290164830206",
-  appId: "1:290164830206:web:49509d69e702593e1c5aaf",
-  measurementId: "G-LY7ZCKGE98",
+  apiKey: "__FIREBASE_API_KEY__",
+  authDomain: "__FIREBASE_AUTH_DOMAIN__",
+  projectId: "__FIREBASE_PROJECT_ID__",
+  storageBucket: "__FIREBASE_STORAGE_BUCKET__",
+  messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
+  appId: "__FIREBASE_APP_ID__",
 };

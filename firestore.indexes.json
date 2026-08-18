@@ -1,0 +1,33 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "publicStudents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "schoolYear", "order": "ASCENDING" },
+        { "fieldPath": "classId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "bookLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "schoolYear", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "bookLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "schoolYear", "order": "ASCENDING" },
+        { "fieldPath": "studentKey", "order": "ASCENDING" },
+        { "fieldPath": "authUid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

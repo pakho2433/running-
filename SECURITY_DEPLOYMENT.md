@@ -1,5 +1,8 @@
 # Reading Run 安全部署清單（學生登入版）
 
+> [!IMPORTANT]
+> 本文件保留學生登入與資料檢查背景，但舊有 GitHub Pages、私人 project、`firebase login`／`firebase use` 及單獨 `--only firestore:rules` 部署方法已廢止。2026–2027 正式部署必須使用校方 GitHub Organization、校方 Firebase staging/production、受保護 environment、OIDC/WIF，以及同一個 Hosting + Firestore + Functions release。權限、DNS、資料移轉和移除私人帳戶的程序見 [`docs/SCHOOL_OWNERSHIP_AND_CUTOVER.md`](./docs/SCHOOL_OWNERSHIP_AND_CUTOVER.md)。
+
 這個版本只設學生登入，不設教師登入平台或教師數據中心。合併程式碼並不等於安全設定已生效；必須完成以下 Firebase Console 及學生帳戶建立步驟。
 
 ## 1. 先在測試 Firebase 專案驗證
@@ -20,7 +23,7 @@
 <schoolCode>.<classId>.<studentId>@students.readingrun.invalid
 ```
 
-本分支預設 `schoolCode` 是 `scysps`，可在 `security-config.js` 修改。例子：
+`schoolCode` 由各 GitHub Environment 的 `SCHOOL_CODE` 注入，production 可設定為 `scysps`。不要直接修改 fail-closed source template。例子：
 
 ```text
 scysps.C01.S0001@students.readingrun.invalid
@@ -48,11 +51,7 @@ users/{firebaseUid}
 
 在專案根目錄執行：
 
-```bash
-firebase login
-firebase use --add
-firebase deploy --only firestore:rules
-```
+不要再由個人電腦單獨部署 Rules。Pull request 必須先通過 `npm run test:rules` 的 allow/deny emulator tests；正式 workflow 才可把 Hosting、Firestore Rules/indexes 和 Functions 作為相容版本一併發佈。
 
 部署後使用 Rules Playground 或 Firebase Emulator 驗證：
 
@@ -84,11 +83,11 @@ updatedAt
 
 1. Firebase Console → App Check → Apps。
 2. 為 Web App 設定 reCAPTCHA v3。
-3. 把 site key 寫入 `security-config.js` 的 `appCheckSiteKey`。
+3. 把 public site key 設為相應 GitHub Environment 的 `FIREBASE_APP_CHECK_SITE_KEY`；建置器會產生 `dist/security-config.js`。
 4. 先使用監察模式，確認合法流量有 App Check token。
 5. 確認無誤後，對 Firestore 啟用 Enforcement。
 
-不要把 reCAPTCHA secret key 放在前端或 GitHub；前端只需要 site key。
+不要把 reCAPTCHA secret key 放在前端或 GitHub；前端只需要由 environment 注入的 public site key。
 
 ## 7. 共用裝置及資料快取
 

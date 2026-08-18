@@ -1,5 +1,5 @@
 import { APP_CONFIG } from "./app-config.js";
-import { initialiseSecurity, loadTeacherDashboardData, loginStudent, loginTeacher, logoutStudent, restoreStudent, restoreTeacher, saveReading, schoolDateKey, scoreReading, subscribeStudent } from "./secure-data-service.js?v=20260709-teacher-1";
+import { initialiseSecurity, loadTeacherDashboardData, loadTeacherLogsPage, loginStudent, loginTeacher, logoutStudent, restoreStudent, restoreTeacher, saveReading, schoolDateKey, scoreReading, subscribeStudent } from "./secure-data-service.js?v=20260818-school-1";
 
 const $ = (selector) => document.querySelector(selector);
 const dom = {
@@ -47,6 +47,7 @@ const dom = {
   classroomGrid: $("#classroomGrid"),
   trackTitle: $("#trackTitle"),
   trackRunnerCount: $("#trackRunnerCount"),
+  trackRunnerCapacity: $("#trackRunnerCapacity"),
   trackLeader: $("#trackLeader"),
   locationButtons: $("#locationButtons"),
   currentLocationLabel: $("#currentLocationLabel"),
@@ -61,6 +62,7 @@ const dom = {
 
 const STAGE_DISTANCE = Number(APP_CONFIG.stageDistance || 1500);
 const LOCATION_COUNT = Number(APP_CONFIG.trackLocations || 10);
+const TEACHER_EXPORT_PAGE_SIZE = 500;
 const state = {
   loginRole: "student",
   user: null,
@@ -112,7 +114,8 @@ function setupPasswordLoginUi() {
   const intro = $(".login-intro");
   if (intro) intro.textContent = "請選擇登入身份，輸入帳戶資料。";
   const note = $(".privacy-note");
-  if (note) note.textContent = "請妥善保管登入資料；每次開啟或重新整理網頁後均須重新登入。";
+  if (note) note.textContent = "請勿共用登入資料；完成後請登出。排行榜只顯示匿名代號，不會公開學生 ID。";
+  if (dom.trackRunnerCapacity) dom.trackRunnerCapacity.textContent = String(APP_CONFIG.maxRunnersPerClass || 76);
   setLoginRole(document.querySelector("input[name='loginRole']:checked")?.value || "student");
 }
 
@@ -144,7 +147,11 @@ function setLoginRole(role) {
     dom.teacherEmail.required = teacherMode;
   }
   if (dom.loginPassword) {
-    dom.loginPassword.placeholder = teacherMode ? "教師密碼" : "最少 6 位";
+    const minimum = teacherMode
+      ? Number(APP_CONFIG.teacherPasswordMinLength || 14)
+      : Number(APP_CONFIG.studentPasswordMinLength || 12);
+    dom.loginPassword.placeholder = teacherMode ? `最少 ${minimum} 位教師密碼` : `最少 ${minimum} 位`;
+    dom.loginPassword.minLength = minimum;
     dom.loginPassword.value = "";
   }
   if (dom.loginButton) dom.loginButton.textContent = teacherMode ? "登入教師平台" : "安全登入";
@@ -161,8 +168,9 @@ async function handleLogin(event) {
 
   const classId = normalise(dom.loginClass?.value, 12);
   const studentId = normalise(dom.studentId?.value, 20);
-  if (!classId || !studentId || password.length < 6) {
-    loginMessage("請選擇課室，並輸入學生 ID 及最少 6 位登入密碼。", true);
+  const minimum = Number(APP_CONFIG.studentPasswordMinLength || 12);
+  if (!classId || !studentId || password.length < minimum) {
+    loginMessage(`請選擇課室，並輸入學生 ID 及最少 ${minimum} 位登入密碼。`, true);
     return;
   }
   loginBusy(true);
@@ -180,8 +188,9 @@ async function handleLogin(event) {
 
 async function handleTeacherLogin(password) {
   const email = cleanEmail(dom.teacherEmail?.value);
-  if (!email || password.length < 8) {
-    loginMessage("請輸入教師電郵及最少 8 位密碼。", true);
+  const minimum = Number(APP_CONFIG.teacherPasswordMinLength || 14);
+  if (!email || password.length < minimum) {
+    loginMessage(`請輸入教師電郵及最少 ${minimum} 位密碼。`, true);
     return;
   }
   loginBusy(true);
@@ -207,10 +216,11 @@ async function enter(user, restored) {
   await ensureTrack();
   subscribeStudent(user, (student) => {
     state.student = student;
+    state.classmates = mergeCurrentStudent(state.classmates, user, student);
     state.location = locationFor(student?.distance || 0);
     render();
   }, (classmates) => {
-    state.classmates = classmates;
+    state.classmates = mergeCurrentStudent(classmates, user, state.student);
     render();
   }, dataError);
   track?.resize?.();
@@ -266,6 +276,17 @@ async function handleBook(event) {
   sync("saving", "● 安全儲存中");
   try {
     const result = await saveReading(state.user, record);
+    state.student = {
+      ...(state.student || {}),
+      booksCount: result.booksCount || Number(state.student?.booksCount || 0) + 1,
+      distance: result.totalDistance || Number(state.student?.distance || 0) + result.distance,
+      lastBook: record.title,
+      lastAuthor: record.author,
+      dailyBooksCount: result.count,
+      dailyDateKey: result.submissionDateKey || schoolDateKey(),
+    };
+    state.classmates = mergeCurrentStudent(state.classmates, state.user, state.student);
+    render();
     clearForm();
     sync("saved", "● 已安全儲存");
     toast(`《${record.title}》已記錄，今日 ${result.count} / ${APP_CONFIG.dailyBookLimit || 5} 本。`);
@@ -300,17 +321,35 @@ async function refreshTeacherData() {
 async function handleTeacherDownload() {
   if (!state.teacher || state.teacherLoading) return;
   teacherBusy(true);
-  teacherStatus("saving", "● 準備 Excel", "正在整理全校閱讀紀錄……");
+  teacherStatus("saving", "● 準備 CSV", "正在準備受控的分頁匯出……");
+  let logStream = null;
   try {
-    const data = await loadTeacherDashboardData({ includeLogs: true });
+    if (typeof window.showSaveFilePicker !== "function") {
+      teacherStatus("error", "● 瀏覽器不支援", "為避免全年資料遺漏或耗盡記憶體，請在校方管理的 Chrome 或 Edge 下載全年 CSV。");
+      toast("教師全年匯出只支援校方管理的 Chrome 或 Edge；學生登入不受影響。", true);
+      return;
+    }
+    const fileHandle = await window.showSaveFilePicker({
+      suggestedName: `reading-run-school-data-${APP_CONFIG.schoolYear}-${schoolDateKey()}.csv`,
+      types: [{ description: "CSV", accept: { "text/csv": [".csv"] } }],
+    });
+    logStream = await fileHandle.createWritable();
+
+    const data = await loadTeacherDashboardData();
     state.teacherData = data;
     renderTeacherDashboard(data);
-    downloadWorkbook(data);
-    teacherStatus("saved", "● 已下載", `已下載 ${number(data.students.length)} 名學生及 ${number(data.logs.length)} 項閱讀紀錄。`);
+    const exportResult = await exportTeacherLogsCsv(logStream, data.schoolYear, data.students);
+    logStream = null;
+    teacherStatus("saved", "● 已下載", `已串流下載 ${number(data.students.length)} 名學生及 ${number(exportResult.rows)} 項閱讀紀錄（1 個 CSV）。`);
   } catch (error) {
+    await logStream?.abort?.().catch(() => {});
+    if (error?.name === "AbortError") {
+      teacherStatus("idle", "● 已取消", "未有匯出任何閱讀紀錄。");
+      return;
+    }
     console.error("Teacher export failed", error);
     teacherStatus("error", "● 下載失敗", teacherError(error));
-    toast("Excel 下載失敗，請稍後再試。", true);
+    toast("CSV 下載失敗，請稍後再試。", true);
   } finally {
     teacherBusy(false);
   }
@@ -318,7 +357,6 @@ async function handleTeacherDownload() {
 
 function renderTeacherDashboard(data) {
   const students = data.students || [];
-  const logs = data.logs || [];
   const totalBooks = students.reduce((sum, item) => sum + item.booksCount, 0);
   const totalDistance = students.reduce((sum, item) => sum + item.distance, 0);
   const activeStudents = students.filter((item) => item.booksCount > 0 || item.distance > 0).length;
@@ -328,7 +366,7 @@ function renderTeacherDashboard(data) {
     ["全校書本", totalBooks, "本"],
     ["全校里數", totalDistance, "里"],
   ]);
-  renderClassRows(classSummary(students, logs));
+  renderClassRows(classSummary(students));
   renderStudentRows(students);
 }
 
@@ -352,7 +390,7 @@ function renderClassRows(rows) {
   if (!dom.teacherClassRows) return;
   dom.teacherClassRows.replaceChildren(...rows.map((row) => {
     const tr = document.createElement("tr");
-    [row.name, row.students, row.activeStudents, row.books, row.distance, row.logs].forEach((value) => tr.append(td(value)));
+    [row.name, row.students, row.activeStudents, row.books, row.distance].forEach((value) => tr.append(td(value)));
     return tr;
   }));
 }
@@ -374,13 +412,12 @@ function renderStudentRows(students) {
   }));
 }
 
-function classSummary(students, logs = []) {
+function classSummary(students) {
   const knownIds = APP_CONFIG.classrooms.map((room) => room.id);
   const extraIds = [...new Set(students.map((item) => item.classId).filter((id) => id && !knownIds.includes(id)))].sort();
   const ids = [...knownIds, ...extraIds];
   return ids.map((classId) => {
     const classStudents = students.filter((item) => item.classId === classId);
-    const classLogs = logs.filter((item) => item.classId === classId);
     const books = classStudents.reduce((sum, item) => sum + item.booksCount, 0);
     const distance = classStudents.reduce((sum, item) => sum + item.distance, 0);
     return {
@@ -390,113 +427,86 @@ function classSummary(students, logs = []) {
       activeStudents: classStudents.filter((item) => item.booksCount > 0 || item.distance > 0).length,
       books,
       distance,
-      logs: classLogs.length,
     };
   });
 }
 
-function downloadWorkbook(data) {
-  const students = data.students || [];
-  const logs = data.logs || [];
-  const classRows = classSummary(students, logs);
-  const workbook = workbookXml([
-    {
-      name: "班級統計",
-      rows: [
-        ["課室", "學生人數", "有閱讀紀錄學生", "總書本", "總里數", "閱讀紀錄數"],
-        ...classRows.map((row) => [row.name, row.students, row.activeStudents, row.books, row.distance, row.logs]),
-      ],
-    },
-    {
-      name: "學生總覽",
-      rows: [
-        ["課室", "學生ID", "總書本", "總里數", "最近書本", "最近作者", "今日本數", "今日日期", "更新時間"],
-        ...students.map((student) => [
-          roomName(student.classId),
-          student.studentId,
-          student.booksCount,
-          student.distance,
-          student.lastBook,
-          student.lastAuthor,
-          student.dailyBooksCount,
-          student.dailyDateKey,
-          timestampText(student.updatedAt),
-        ]),
-      ],
-    },
-    {
-      name: "閱讀紀錄",
-      rows: [
-        ["提交日期", "閱讀日期", "課室", "學生ID", "書名", "作者", "讀物類別", "科目", "完成閱讀", "獲得里數", "每日序號", "建立時間"],
-        ...logs.map((log) => [
-          log.submissionDateKey,
-          log.readingDate,
-          roomName(log.classId),
-          log.studentId,
-          log.title,
-          log.author,
-          log.readingType,
-          log.subject,
-          log.completed === "yes" ? "是" : "否",
-          log.distanceAwarded,
-          log.dailySequence,
-          timestampText(log.createdAt) || log.clientCreatedAt,
-        ]),
-      ],
-    },
-  ]);
-  const blob = new Blob([workbook], { type: "application/vnd.ms-excel;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `reading-run-school-data-${schoolDateKey()}.xls`;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+async function exportTeacherLogsCsv(writable, schoolYear, students) {
+  const header = ["類型", "課室", "學生ID", "總書本", "總里數", "最近書本", "最近作者", "今日本數", "今日日期", "學生更新時間", "提交日期", "閱讀日期", "書名", "作者", "讀物類別", "科目", "完成閱讀", "獲得里數", "每日序號", "建立時間"];
+  let pageToken = "";
+  let rowsExported = 0;
+  const seenTokens = new Set();
+
+  const studentRows = (students || []).map(teacherStudentCsvRow);
+  await writable.write(`\uFEFF${csvLine(header)}${studentRows.map(csvLine).join("")}`);
+
+  for (let page = 0; page < 2_000; page += 1) {
+    const result = await loadTeacherLogsPage({ pageToken, pageSize: TEACHER_EXPORT_PAGE_SIZE });
+    const rows = result.logs.map(teacherLogCsvRow);
+    rowsExported += rows.length;
+
+    if (rows.length) await writable.write(rows.map(csvLine).join(""));
+
+    if (!result.nextPageToken) {
+      await writable.close();
+      return { rows: rowsExported, files: 1, schoolYear };
+    }
+    if (seenTokens.has(result.nextPageToken)) throw new Error("TEACHER_LOG_PAGINATION_LOOP");
+    seenTokens.add(result.nextPageToken);
+    pageToken = result.nextPageToken;
+  }
+  throw new Error("TEACHER_LOG_PAGE_LIMIT");
 }
 
-function workbookXml(sheets) {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:html="http://www.w3.org/TR/REC-html40">
- <Styles>
-  <Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#dce7ef" ss:Pattern="Solid"/></Style>
- </Styles>
- ${sheets.map(sheetXml).join("\n")}
-</Workbook>`;
+function teacherStudentCsvRow(student) {
+  return [
+    "學生總覽",
+    roomName(student.classId),
+    student.studentId,
+    student.booksCount,
+    student.distance,
+    student.lastBook,
+    student.lastAuthor,
+    student.dailyBooksCount,
+    student.dailyDateKey,
+    timestampText(student.updatedAt),
+    "", "", "", "", "", "", "", "", "", "",
+  ];
 }
 
-function sheetXml(sheet) {
-  return `<Worksheet ss:Name="${escapeXml(sheet.name.slice(0, 31))}">
-  <Table>
-   ${sheet.rows.map((row, index) => `<Row>${row.map((value) => cellXml(value, index === 0)).join("")}</Row>`).join("\n   ")}
-  </Table>
- </Worksheet>`;
+function teacherLogCsvRow(log) {
+  return [
+    "閱讀紀錄",
+    roomName(log.classId),
+    log.studentId,
+    "", "", "", "", "", "", "",
+    log.submissionDateKey,
+    log.readingDate,
+    log.title,
+    log.author,
+    log.readingType,
+    log.subject,
+    log.completed === "yes" ? "是" : "否",
+    log.distanceAwarded,
+    log.dailySequence,
+    timestampText(log.createdAt) || log.clientCreatedAt,
+  ];
 }
 
-function cellXml(value, header = false) {
-  const numberValue = Number(value);
-  const numeric = typeof value === "number" && Number.isFinite(numberValue);
-  const style = header ? ' ss:StyleID="Header"' : "";
-  const type = numeric ? "Number" : "String";
-  const text = numeric ? String(numberValue) : escapeXml(excelSafeText(value));
-  return `<Cell${style}><Data ss:Type="${type}">${text}</Data></Cell>`;
+function csvCell(value) {
+  const text = String(value ?? "").replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
+  const safe = /^\s*[=+\-@]/.test(text) ? `'${text}` : text;
+  return `"${safe.replaceAll('"', '""')}"`;
 }
 
-function excelSafeText(value) {
-  const text = String(value ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, " ");
-  return /^[=+\-@]/.test(text) ? `'${text}` : text;
+function csvLine(row) {
+  return `${row.map(csvCell).join(",")}\r\n`;
 }
 
 function render() {
   if (!state.user) return;
   const student = state.student || {};
-  const ranked = [...state.classmates].sort(compare).slice(0, APP_CONFIG.maxRunnersPerClass || 26);
+  const ranked = [...state.classmates].sort(compare).slice(0, APP_CONFIG.maxRunnersPerClass || 76);
   const visible = ranked.filter((item) => locationFor(item.distance) === state.location);
   const rangeStart = state.location * STAGE_DISTANCE;
   const rangeEnd = rangeStart + STAGE_DISTANCE;
@@ -508,7 +518,7 @@ function render() {
   renderClassCard();
   if (dom.trackTitle) dom.trackTitle.textContent = `${roomName(state.user.classId)} 跑道`;
   if (dom.trackRunnerCount) dom.trackRunnerCount.textContent = String(visible.length);
-  if (dom.trackLeader) dom.trackLeader.textContent = ranked[0]?.studentId || "—";
+  if (dom.trackLeader) dom.trackLeader.textContent = ranked[0] ? studentAlias(ranked[0]) : "—";
   if (dom.currentLocationLabel) dom.currentLocationLabel.textContent = `地方 ${state.location + 1} · ${number(rangeStart)}–${number(rangeEnd)} 里`;
   if (dom.trackRange) dom.trackRange.textContent = `${number(rangeStart)}–${number(rangeEnd)} 里`;
   dom.trackEmpty?.classList.toggle("is-hidden", visible.length > 0 && Boolean(track));
@@ -552,7 +562,7 @@ function renderRanking(students) {
   dom.leaderboardList.replaceChildren(...students.map((student, index) => {
     const item = document.createElement("li");
     item.className = "leaderboard-item";
-    item.innerHTML = `<span class="leaderboard-rank">${["🥇", "🥈", "🥉", "4", "5"][index]}</span><span class="leaderboard-student">${escapeHtml(student.studentId)}</span><span class="leaderboard-distance">${number(student.distance)} 里</span>`;
+    item.innerHTML = `<span class="leaderboard-rank">${["🥇", "🥈", "🥉", "4", "5"][index]}</span><span class="leaderboard-student">${escapeHtml(studentAlias(student))}</span><span class="leaderboard-distance">${number(student.distance)} 里</span>`;
     return item;
   }));
 }
@@ -562,7 +572,7 @@ function renderRunnerList(students) {
   dom.runnerList.replaceChildren(...students.map((student, index) => {
     const item = document.createElement("div");
     item.className = `runner-chip${student.id === state.user.key ? " is-me" : ""}`;
-    item.innerHTML = `<span>${index === 0 ? "🏆 " : ""}${escapeHtml(student.studentId)}</span><small>${number(student.booksCount)} 本 · ${number(student.distance)} 里</small>`;
+    item.innerHTML = `<span>${index === 0 ? "🏆 " : ""}${escapeHtml(studentAlias(student))}</span><small>${number(student.booksCount)} 本 · ${number(student.distance)} 里</small>`;
     return item;
   }));
 }
@@ -607,10 +617,12 @@ function teacherBusy(value) { state.teacherLoading = value; [dom.teacherRefreshB
 function loginMessage(text, error = false) { if (dom.loginMessage) { dom.loginMessage.textContent = text; dom.loginMessage.dataset.state = error ? "error" : "loading"; } }
 function teacherStatus(status, badge, text) { if (dom.teacherSyncStatus) { dom.teacherSyncStatus.dataset.state = status; dom.teacherSyncStatus.textContent = badge; } if (dom.teacherStatus) { dom.teacherStatus.textContent = text || ""; dom.teacherStatus.dataset.state = status; } }
 function dataError(error) { console.error(error); sync("error", "● 權限或同步失敗"); toast("未能讀取資料，請重新登入。", true); }
-function loginError(error) { if (error?.message === "MISSING_LOGIN_FIELDS") return "請輸入課室、學生 ID 及最少 6 位密碼。"; if (error?.message === "MISSING_TEACHER_LOGIN_FIELDS") return "請輸入教師電郵及最少 8 位密碼。"; if (error?.message === "STUDENT_ID_NOT_FOUND" || error?.code === "auth/user-not-found") return "未有此 ID，請檢查班別及學生 ID。"; if (error?.message === "PASSWORD_INCORRECT" || error?.code === "auth/invalid-credential" || error?.code === "auth/wrong-password") return "密碼不正確，請重新輸入。"; if (error?.message === "PROFILE_MISMATCH") return "帳戶身份與學生 ID 或班別不符，請聯絡教師。"; if (error?.message === "TEACHER_PROFILE_MISMATCH") return "此帳戶未啟用教師權限，請檢查帳戶設定。"; if (error?.code === "auth/operation-not-allowed") return "Firebase 尚未啟用 Email/Password 登入。"; return "暫時未能登入，請檢查網絡或帳戶設定。"; }
-function teacherError(error) { if (error?.message === "TEACHER_PROFILE_MISMATCH") return "此帳戶未啟用教師權限。"; if (error?.code === "permission-denied") return "教師帳戶未獲授權讀取全校資料。"; return "未能讀取教師數據，請檢查網絡或重新登入。"; }
+function loginError(error) { if (error?.message === "MISSING_LOGIN_FIELDS") return `請輸入課室、學生 ID 及最少 ${APP_CONFIG.studentPasswordMinLength || 12} 位密碼。`; if (error?.message === "MISSING_TEACHER_LOGIN_FIELDS") return `請輸入教師電郵及最少 ${APP_CONFIG.teacherPasswordMinLength || 14} 位密碼。`; if (error?.message === "TEACHER_LOGIN_FAILED") return "教師電郵、密碼或權限不正確。"; return "班別、學生 ID 或密碼不正確；如持續未能登入，請聯絡教師。"; }
+function teacherError(error) { if (error?.code === "permission-denied" || error?.code === "functions/permission-denied") return "教師帳戶未獲授權讀取全校資料。"; return "未能讀取教師數據，請檢查網絡或重新登入。"; }
 function locationFor(distance) { return Math.max(0, Math.min(LOCATION_COUNT - 1, Math.floor(Number(distance || 0) / STAGE_DISTANCE))); }
 function compare(a, b) { return Number(b.distance || 0) - Number(a.distance || 0) || Number(b.booksCount || 0) - Number(a.booksCount || 0); }
+function mergeCurrentStudent(classmates, user, student) { const current = { id: user.studentKey, schoolYear: user.schoolYear, classId: user.classId, displayAlias: user.displayAlias, booksCount: Number(student?.booksCount || 0), distance: Number(student?.distance || 0), updatedAt: student?.updatedAt || null }; const others = (classmates || []).filter((item) => item.id !== user.studentKey); return [...others, current]; }
+function studentAlias(student) { return String(student?.displayAlias || "").trim() || "匿名同學"; }
 function normalise(value, limit) { return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, limit); }
 function clean(value, limit) { return String(value || "").trim().replace(/\s+/g, " ").slice(0, limit); }
 function cleanEmail(value) { return String(value || "").trim().toLowerCase().slice(0, 120); }
@@ -620,6 +632,5 @@ function makeOption(value, text) { const item = document.createElement("option")
 function td(value) { const cell = document.createElement("td"); cell.textContent = typeof value === "number" ? number(value) : String(value ?? ""); return cell; }
 function timestampText(value) { if (typeof value?.toDate === "function") return value.toDate().toISOString().replace("T", " ").slice(0, 19); if (typeof value?.toMillis === "function") return new Date(value.toMillis()).toISOString().replace("T", " ").slice(0, 19); return String(value || ""); }
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character])); }
-function escapeXml(value) { return String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;" }[character])); }
 function sync(status, text) { if (dom.syncStatus) { dom.syncStatus.dataset.state = status; dom.syncStatus.textContent = text; } }
 function toast(text, error = false) { if (!dom.toastRegion) return; const item = document.createElement("div"); item.className = `toast${error ? " error" : ""}`; item.textContent = text; dom.toastRegion.append(item); setTimeout(() => item.remove(), 4000); }

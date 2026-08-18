@@ -1,0 +1,24 @@
+{
+  "name": "school-reading-run-deployment",
+  "version": "1.0.0",
+  "private": true,
+  "description": "School-owned build and deployment tooling for Reading Run.",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "scripts": {
+    "build": "node scripts/build-site.mjs",
+    "check:source": "node scripts/check-source.mjs",
+    "validate:dist": "node scripts/validate-dist.mjs",
+    "configure:firebase": "node scripts/configure-firebase-target.mjs",
+    "verify:deployment": "node scripts/verify-deployment-context.mjs",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-reading-run \"node --test tests/firestore.rules.test.mjs\"",
+    "test:release": "node --test tests/release-school-year-contract.test.mjs",
+    "test": "npm run check:source && npm run test:release && npm --prefix functions test && npm --prefix admin-tools test && npm run build && npm run validate:dist"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.0.0",
+    "firebase-tools": "15.25.1"
+  }
+}

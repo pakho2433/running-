@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "SCHOOL_FIREBASE_PROJECT_ID"
+  },
+  "targets": {
+    "SCHOOL_FIREBASE_PROJECT_ID": {
+      "hosting": {
+        "reading": [
+          "SCHOOL_FIREBASE_HOSTING_SITE_ID"
+        ]
+      }
+    }
+  }
+}

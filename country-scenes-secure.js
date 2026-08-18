@@ -13,12 +13,10 @@ const SCENES = [
 
 loadStyle("device-layout-secure", "./device-layout.css?v=20260709-student-only-1");
 loadScript("device-layout-secure", "./device-layout.js?v=20260709-student-only-1");
-loadStyle("daily-recommendation-secure", "./daily-book-recommendation.css?v=20260709-student-only-1");
 loadStyle("country-landmarks-secure", "./country-landmarks-3d.css?v=20260709-student-only-1");
 loadStyle("world-runway-responsive-fit", "./world-runway-responsive-fit.css?v=20260710-overflow-fix-1");
 loadStyle("world-runway-device-fit", "./world-runway-device-fit.css?v=20260711-map-fit-2");
 
-import("./daily-book-recommendation-secure.js?v=20260709-student-only-1").catch(console.error);
 import("./country-landmarks-3d.js?v=20260709-student-only-1").catch(console.error);
 import("./world-runway-audio.js?v=20260710-world-audio-fix-2").catch(console.error);
 import("./world-runway-layout-fix.js?v=20260710-layout-fix-1").catch(console.error);

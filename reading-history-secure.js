@@ -1,43 +1,89 @@
-import { getApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js?secure-data=1";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js?secure-data=1";
-import { collection, getDocs, getFirestore, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js?secure-data=1";
+import { getApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { collection, getDocs, getFirestore, limit, orderBy, query, startAfter, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { APP_CONFIG } from "./app-config.js";
 
-const SESSION_KEY = "reading-run-session-v1";
+const SESSION_KEY = "reading-run-session-v2";
+const PAGE_SIZE = Math.min(50, Math.max(1, Number(APP_CONFIG.historyPageSize || 50)));
 const button = document.querySelector("#readingBuddyButton");
 const modal = document.querySelector("#readingHistoryModal");
 const closeButton = document.querySelector("#readingHistoryClose");
+const loadMoreButton = document.querySelector("#readingHistoryLoadMore");
 const list = document.querySelector("#readingHistoryList");
 const status = document.querySelector("#readingHistoryStatus");
 const summary = document.querySelector("#readingHistorySummary");
 
+let records = [];
+let lastDocument = null;
+let hasMore = false;
+let loading = false;
+
 button?.addEventListener("click", openHistory);
 closeButton?.addEventListener("click", closeHistory);
+loadMoreButton?.addEventListener("click", () => loadPage(false));
 modal?.addEventListener("click", (event) => { if (event.target === modal) closeHistory(); });
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !modal?.classList.contains("is-hidden")) closeHistory(); });
 
 async function openHistory() {
   modal.classList.remove("is-hidden");
   document.body.classList.add("history-open");
+  records = [];
+  lastDocument = null;
+  hasMore = false;
   list.replaceChildren();
   summary.textContent = "";
-  status.textContent = "正在載入本人閱讀歷史……";
+  status.classList.remove("is-error");
+  loadMoreButton?.classList.add("is-hidden");
+  await loadPage(true);
+}
+
+async function loadPage(reset) {
+  if (loading || (!reset && !hasMore)) return;
+  loading = true;
+  if (loadMoreButton) loadMoreButton.disabled = true;
+  status.textContent = reset ? "正在載入本學年閱讀紀錄……" : "正在載入更多紀錄……";
   try {
     const session = readSession();
     const auth = getAuth(getApp());
-    if (!auth.currentUser || !session?.classId || !session?.studentId) throw new Error("請先安全登入學生帳戶。");
-    const studentKey = `${session.classId}__${session.studentId}`;
+    if (
+      !auth.currentUser
+      || session?.role !== "student"
+      || session?.schoolYear !== APP_CONFIG.schoolYear
+      || !session?.studentKey
+    ) {
+      throw new Error("請先安全登入學生帳戶。");
+    }
+
+    const constraints = [
+      where("studentKey", "==", session.studentKey),
+      where("schoolYear", "==", APP_CONFIG.schoolYear),
+      where("authUid", "==", auth.currentUser.uid),
+      orderBy("createdAt", "desc"),
+      limit(PAGE_SIZE),
+    ];
+    if (!reset && lastDocument) constraints.splice(4, 0, startAfter(lastDocument));
     const snapshot = await getDocs(query(
       collection(getFirestore(getApp()), "bookLogs"),
-      where("studentKey", "==", studentKey),
+      ...constraints,
     ));
-    const records = snapshot.docs
-      .map((item) => ({ id: item.id, ...item.data() }))
-      .sort((a, b) => timeOf(b) - timeOf(a));
-    render(records, session.studentId);
+    const page = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    records = reset ? page : [...records, ...page];
+    lastDocument = snapshot.docs[snapshot.docs.length - 1] || lastDocument;
+    hasMore = snapshot.size === PAGE_SIZE;
+    render(records);
   } catch (error) {
-    console.error(error);
-    status.textContent = error?.message || "未能載入閱讀歷史。";
+    console.error("Reading history load failed", error);
+    status.textContent = error?.code === "permission-denied"
+      ? "未獲授權讀取閱讀紀錄，請重新登入。"
+      : (error?.message || "未能載入閱讀紀錄。");
     status.classList.add("is-error");
+    hasMore = false;
+  } finally {
+    loading = false;
+    if (loadMoreButton) {
+      loadMoreButton.disabled = false;
+      loadMoreButton.classList.toggle("is-hidden", !hasMore);
+    }
   }
 }
 
@@ -47,12 +93,13 @@ function closeHistory() {
   button?.focus();
 }
 
-function render(records, studentId) {
+function render(items) {
   status.classList.remove("is-error");
-  const distance = records.reduce((sum, item) => sum + Number(item.distanceAwarded || 0), 0);
-  summary.textContent = `${studentId} · ${records.length} 本書 · ${number(distance)} 里`;
-  status.textContent = records.length ? `已顯示 ${records.length} 項本人紀錄` : "暫時未有閱讀紀錄。";
-  list.replaceChildren(...records.map((record, index) => card(record, index)));
+  const distance = items.reduce((sum, item) => sum + Number(item.distanceAwarded || 0), 0);
+  summary.textContent = `${APP_CONFIG.schoolYear} · 已載入 ${items.length} 本書 · ${number(distance)} 里`;
+  if (!items.length) status.textContent = "本學年尚未有閱讀紀錄。";
+  else status.textContent = hasMore ? `已載入最近 ${items.length} 項；可繼續載入。` : `已載入全部 ${items.length} 項紀錄。`;
+  list.replaceChildren(...items.map((record, index) => card(record, index)));
 }
 
 function card(record, index) {
@@ -66,17 +113,22 @@ function card(record, index) {
   const heading = document.createElement("div");
   heading.className = "history-record-heading";
   const title = document.createElement("strong");
-  title.textContent = record.title ? `《${record.title}》` : "未命名讀物";
+  title.textContent = record.title ? `《${record.title}》` : "未命名書本";
   const distance = document.createElement("span");
   distance.className = "history-record-distance";
   distance.textContent = `+${number(record.distanceAwarded)} 里`;
   heading.append(title, distance);
   const author = document.createElement("p");
   author.className = "history-record-author";
-  author.textContent = `作者：${record.author || "未填寫"}`;
+  author.textContent = `作者：${record.author || "未有資料"}`;
   const meta = document.createElement("div");
   meta.className = "history-record-meta";
-  [record.submissionDateKey || record.readingDate || "日期未填寫", record.readingType || "未選類別", record.subject || "未選科目", record.completed === "yes" ? "已完成" : "未完成"].forEach((text) => {
+  [
+    record.submissionDateKey || record.readingDate || "日期未有資料",
+    record.readingType || "未選讀物類別",
+    record.subject || "未選科目",
+    record.completed === "yes" ? "已完成" : "未完成",
+  ].forEach((text) => {
     const tag = document.createElement("span");
     tag.textContent = text;
     meta.append(tag);
@@ -87,11 +139,8 @@ function card(record, index) {
 }
 
 function readSession() {
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); }
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null"); }
   catch { return null; }
 }
-function timeOf(record) {
-  if (record.createdAt?.toMillis) return record.createdAt.toMillis();
-  return Date.parse(record.clientCreatedAt || record.readingDate || "") || 0;
-}
+
 function number(value) { return new Intl.NumberFormat("zh-HK").format(Number(value || 0)); }
