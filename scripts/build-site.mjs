@@ -33,6 +33,17 @@ indexHtml = indexHtml.replace(
 if (/daily-book-recommendation\.js/.test(indexHtml)) {
   throw new Error("index.html still loads the retired anonymous recommendation client.");
 }
+
+const readingBuddyTag = '<script type="module" src="./reading-buddy-bootstrap.js?v=20260819-reading-buddy-restore-2"></script>';
+if (!indexHtml.includes("reading-buddy-bootstrap.js")) {
+  if (!indexHtml.includes("</body>")) {
+    throw new Error("index.html is missing </body>; cannot attach Reading Buddy bootstrap.");
+  }
+  indexHtml = indexHtml.replace("</body>", `${readingBuddyTag}</body>`);
+}
+if (!indexHtml.includes("reading-buddy-bootstrap.js")) {
+  throw new Error("Reading Buddy bootstrap was not attached to index.html.");
+}
 await writeFile(indexPath, indexHtml, "utf8");
 
 const appConfigSource = await readFile(path.join(root, "app-config.js"), "utf8");
