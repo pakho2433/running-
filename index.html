@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="./map-controls.css?v=20260710-orbit-hotspot-1" />
   <link rel="stylesheet" href="./book-mascot.css?v=20260709-student-only-1" />
   <link rel="stylesheet" href="./country-history.css?v=20260709-student-only-1" />
-  <link rel="stylesheet" href="./daily-book-recommendation.css?v=20260709-student-only-1" />
   <link rel="stylesheet" href="./teacher-dashboard.css?v=20260709-teacher-1" />
 </head>
 <body>
@@ -34,9 +33,9 @@
           <label><span>學生 ID</span><input id="studentId" type="text" placeholder="例如：S0123" autocomplete="username" required /></label>
         </div>
         <div id="teacherLoginFields" class="login-field-group is-hidden">
-          <label><span>教師電郵</span><input id="teacherEmail" type="email" placeholder="teacher@example.com" autocomplete="username" disabled /></label>
+          <label><span>教師電郵</span><input id="teacherEmail" type="email" placeholder="校方職員電郵" autocomplete="username" disabled /></label>
         </div>
-        <label><span>登入密碼</span><input id="loginPassword" type="password" placeholder="最少 6 位" autocomplete="current-password" required /></label>
+        <label><span>登入密碼</span><input id="loginPassword" type="password" placeholder="最少 12 位" minlength="12" autocomplete="current-password" required /></label>
         <button id="loginButton" class="primary-button" type="submit">安全登入</button>
       </form>
       <div id="loginMessage" class="form-message" role="status"></div>
@@ -71,7 +70,7 @@
       </aside>
       <section class="content-area">
         <section class="overview-section" aria-labelledby="overviewTitle"><div class="section-heading"><div><p class="eyebrow">YOUR CLASS</p><h2 id="overviewTitle">班級閱讀狀況</h2></div><p>學生只會下載自己班別的公開排行榜資料。</p></div><div id="classroomGrid" class="classroom-grid"></div></section>
-        <section class="track-section" aria-labelledby="trackTitle"><div class="section-heading track-heading"><div><p class="eyebrow">LIVE 3D TRACK · 15,000 里</p><h2 id="trackTitle">課室跑道</h2></div><div class="track-stats"><span><strong id="trackRunnerCount">0</strong> / 26 人</span><span>最前：<strong id="trackLeader">—</strong></span></div></div><section class="location-panel" aria-labelledby="locationPanelTitle"><div class="location-panel-heading"><div><p class="eyebrow">10 COUNTRIES</p><h3 id="locationPanelTitle">環遊世界閱讀跑道</h3></div><span id="currentLocationLabel">地方 1 · 0–1,500 里</span></div><div id="locationButtons" class="location-buttons"></div></section><div class="track-range-bar"><span>正在觀看</span><strong id="trackRange">0–1,500 里</strong></div><div class="track-shell"><button id="mapExitButton" class="map-exit-button" type="button" aria-hidden="true">✕ 退出全屏</button><div class="map-control-bar" aria-label="地圖視角控制"><button id="mapExpandButton" class="map-control-button" type="button" aria-pressed="false">⛶ 放大地圖</button><button id="firstPersonButton" class="map-control-button" type="button" aria-pressed="false">👁 第一身</button><button id="orbitViewButton" class="map-control-button" type="button" aria-pressed="false">↻ 360° 自由觀看</button><button id="resetViewButton" class="map-control-button" type="button">⌂ 重設視角</button></div><div id="trackCanvas" class="track-canvas" aria-label="3D 學生跑道"></div><p id="mapViewHint" class="map-view-hint">按「第一身」跟隨自己；按「360°」後拖曳旋轉。</p><div id="trackEmpty" class="track-empty">這個位置暫時未有學生。</div></div><section class="leaderboard-section" aria-labelledby="leaderboardTitle"><div class="leaderboard-heading"><div><p class="eyebrow">TOP 5</p><h3 id="leaderboardTitle">班級閱讀里數龍虎榜</h3></div><span id="leaderboardClass">—</span></div><ol id="leaderboardList" class="leaderboard-list"></ol></section><div id="runnerList" class="runner-list" aria-live="polite"></div></section>
+        <section class="track-section" aria-labelledby="trackTitle"><div class="section-heading track-heading"><div><p class="eyebrow">CLASS 3D TRACK · 15,000 里</p><h2 id="trackTitle">課室跑道</h2></div><div class="track-stats"><span><strong id="trackRunnerCount">0</strong> / <span id="trackRunnerCapacity">76</span> 人</span><span>最前：<strong id="trackLeader">—</strong></span></div></div><section class="location-panel" aria-labelledby="locationPanelTitle"><div class="location-panel-heading"><div><p class="eyebrow">10 COUNTRIES</p><h3 id="locationPanelTitle">環遊世界閱讀跑道</h3></div><span id="currentLocationLabel">地方 1 · 0–1,500 里</span></div><div id="locationButtons" class="location-buttons"></div></section><div class="track-range-bar"><span>正在觀看</span><strong id="trackRange">0–1,500 里</strong></div><div class="track-shell"><button id="mapExitButton" class="map-exit-button" type="button" aria-hidden="true">✕ 退出全屏</button><div class="map-control-bar" aria-label="地圖視角控制"><button id="mapExpandButton" class="map-control-button" type="button" aria-pressed="false">⛶ 放大地圖</button><button id="firstPersonButton" class="map-control-button" type="button" aria-pressed="false">👁 第一身</button><button id="orbitViewButton" class="map-control-button" type="button" aria-pressed="false">↻ 360° 自由觀看</button><button id="resetViewButton" class="map-control-button" type="button">⌂ 重設視角</button></div><div id="trackCanvas" class="track-canvas" aria-label="3D 學生跑道"></div><p id="mapViewHint" class="map-view-hint">按「第一身」跟隨自己；按「360°」後拖曳旋轉。</p><div id="trackEmpty" class="track-empty">這個位置暫時未有學生。</div></div><section class="leaderboard-section" aria-labelledby="leaderboardTitle"><div class="leaderboard-heading"><div><p class="eyebrow">TOP 5</p><h3 id="leaderboardTitle">班級閱讀里數龍虎榜</h3></div><span id="leaderboardClass">—</span></div><ol id="leaderboardList" class="leaderboard-list"></ol></section><div id="runnerList" class="runner-list" aria-live="polite"></div></section>
       </section>
     </main>
   </div>
@@ -79,7 +78,7 @@
   <div id="teacherShell" class="teacher-shell is-hidden">
     <header class="topbar">
       <div><p class="eyebrow">TEACHER DASHBOARD</p><h1>全校閱讀數據</h1></div>
-      <div class="topbar-actions"><span id="teacherSyncStatus" class="sync-status" data-state="idle">● 等待登入</span><button id="teacherRefreshButton" class="ghost-button" type="button">重新整理</button><button id="teacherDownloadButton" class="primary-button" type="button">下載 Excel</button><button id="teacherLogoutButton" class="ghost-button" type="button">登出</button></div>
+      <div class="topbar-actions"><span id="teacherSyncStatus" class="sync-status" data-state="idle">● 等待登入</span><button id="teacherRefreshButton" class="ghost-button" type="button">重新整理</button><button id="teacherDownloadButton" class="primary-button" type="button">下載全年 CSV</button><button id="teacherLogoutButton" class="ghost-button" type="button">登出</button></div>
     </header>
     <main class="teacher-main">
       <section class="teacher-profile-bar">
@@ -89,7 +88,7 @@
       <section id="teacherSummaryCards" class="teacher-metrics" aria-label="全校摘要"></section>
       <section class="teacher-panel" aria-labelledby="teacherClassTitle">
         <div class="section-heading"><div><p class="eyebrow">CLASS SUMMARY</p><h2 id="teacherClassTitle">班級統計</h2></div></div>
-        <div class="teacher-table-wrap"><table class="teacher-table"><thead><tr><th>課室</th><th>學生</th><th>有紀錄</th><th>書本</th><th>里數</th><th>紀錄</th></tr></thead><tbody id="teacherClassRows"></tbody></table></div>
+        <div class="teacher-table-wrap"><table class="teacher-table"><thead><tr><th>課室</th><th>學生</th><th>有紀錄</th><th>書本</th><th>里數</th></tr></thead><tbody id="teacherClassRows"></tbody></table></div>
       </section>
       <section class="teacher-panel" aria-labelledby="teacherStudentTitle">
         <div class="section-heading"><div><p class="eyebrow">STUDENTS</p><h2 id="teacherStudentTitle">學生總覽</h2></div></div>
@@ -98,8 +97,8 @@
     </main>
   </div>
 
-  <div id="readingHistoryModal" class="history-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="readingHistoryTitle"><section class="history-dialog"><header class="history-dialog-header"><div><p class="eyebrow">READING BUDDY</p><h2 id="readingHistoryTitle">我的閱讀歷史</h2><p>只有本人可以查看。</p></div><button id="readingHistoryClose" class="history-close-button" type="button" aria-label="關閉閱讀歷史">✕</button></header><div class="history-summary-bar"><strong id="readingHistorySummary"></strong><span id="readingHistoryStatus" role="status">按 Reading Buddy 載入紀錄。</span></div><div id="readingHistoryList" class="history-list"></div></section></div>
+  <div id="readingHistoryModal" class="history-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="readingHistoryTitle"><section class="history-dialog"><header class="history-dialog-header"><div><p class="eyebrow">READING BUDDY</p><h2 id="readingHistoryTitle">我的閱讀歷史</h2><p>只有本人可以查看。</p></div><button id="readingHistoryClose" class="history-close-button" type="button" aria-label="關閉閱讀歷史">✕</button></header><div class="history-summary-bar"><strong id="readingHistorySummary"></strong><span id="readingHistoryStatus" role="status">按 Reading Buddy 載入紀錄。</span></div><div id="readingHistoryList" class="history-list"></div><button id="readingHistoryLoadMore" class="ghost-button is-hidden" type="button">載入更多</button></section></div>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <script src="./reset-all-v1.js?v=20260709-student-only-1"></script><script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js": "./three-reading-wrapper.js?v=20260709-student-only-1", "./app-config.js": "./app-config.js?v=20260709-student-only-1", "./firebase-config.js": "./firebase-config-v3.js?v=20260709-student-only-1" } }</script><script type="module" src="./map-controls.js?v=20260710-orbit-hotspot-1"></script><script type="module" src="./app-stage.js?v=20260709-teacher-1"></script><script type="module" src="./country-scenes.js?v=20260711-map-fit-2"></script><script type="module" src="./reading-history.js?v=20260709-student-only-1"></script><script type="module" src="./daily-book-recommendation.js?v=20260709-secure-login-2"></script>
+  <script src="./reset-all-v1.js?v=20260709-student-only-1"></script><script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js": "./three-reading-wrapper.js?v=20260709-student-only-1", "./app-config.js": "./app-config.js?v=20260709-student-only-1", "./firebase-config.js": "./firebase-config-v3.js?v=20260709-student-only-1" } }</script><script type="module" src="./map-controls.js?v=20260710-orbit-hotspot-1"></script><script type="module" src="./app-stage.js?v=20260709-teacher-1"></script><script type="module" src="./country-scenes.js?v=20260711-map-fit-2"></script><script type="module" src="./reading-history.js?v=20260709-student-only-1"></script>
 </body>
 </html>

@@ -4,9 +4,10 @@
   "type": "module",
   "scripts": {
     "import-users": "node import-users-from-csv.mjs",
-    "create-teacher": "node create-teacher.mjs"
+    "create-teacher": "node create-teacher.mjs",
+    "test": "node --test"
   },
   "dependencies": {
-    "firebase-admin": "^13.4.0"
+    "firebase-admin": "14.2.0"
   }
 }

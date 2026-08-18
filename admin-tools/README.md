@@ -1,100 +1,80 @@
-# Reading Run Firebase 學生帳戶匯入工具
+# Reading Run 校方帳戶管理工具
 
-這個工具只用來把你已準備好的學生帳戶 CSV 匯入 Firebase。GitHub Pages 網頁不會、也不應該儲存學生 ID 或密碼。
+這些工具只供校方受管控的管理員工作站使用。正式網站不會、也不應儲存學生密碼或管理員憑證。
 
-正確登入流程：
+## 安全原則
+
+- 只可連接由學校／東華三院持有的 Google Cloud/Firebase 專案。
+- 使用 Google Application Default Credentials（ADC）或 Workload Identity Federation；不要下載或保存長期 `service-account.json` key。
+- 不要把正式學生 CSV、密碼、匯出資料或 `.env` 上載到 GitHub。
+- 每名學生使用獨立、隨機、最少 12 字元的密碼；不要使用學號、生日、`123456` 或全班共用密碼。
+- 教師帳戶須使用學校電郵、最少 14 字元密碼及 MFA；工具不會把教師密碼印在終端。
+- `FIREBASE_PROJECT_ID` 及 `READING_RUN_CONFIRM_PROJECT` 必須完全相同，避免誤寫私人或錯誤專案。
+
+## 2026–2027 登入及資料隔離
+
+學生在網站輸入班別、學生 ID 及密碼。前端把資料轉成含學年的 Firebase Auth alias，例如：
 
 ```text
-學生在 GitHub Pages 輸入：班別 + 學生 ID + 密碼
-→ 前端把班別 + 學生 ID 轉成 Firebase Authentication email alias
-→ Firebase Authentication 驗證密碼
-→ Firestore users/{uid} 檢查 role / classId / studentId 是否吻合
-→ 通過後才進入閱讀跑道
+scysps.20262027.c01.s0001@students.readingrun.invalid
 ```
 
-## 重要安全事項
+成功登入後仍須通過 `users/{uid}` 的 `role`、`active`、`classId`、`studentId`、`schoolYear` 及 `studentKey` 驗證。正式學生文件使用不含班別／學號的 opaque key：
 
-- 不要把 `service-account.json` 上載到 GitHub。
-- 不要把正式學生密碼的 CSV 上載到 GitHub。
-- `users.example.csv` 只是一個學生帳戶格式範本。
-- 本平台只設學生登入，不建立教師帳戶。
-- 真正的學生 ID 和密碼資料應只存在 Firebase Authentication 及 Firestore `users/{uid}` 角色文件。
+```text
+students/2026-2027__{uid}
+publicStudents/2026-2027__{uid}
+```
+
+`publicStudents` 只存非登入用途的 `displayAlias`，不存學生 ID。
 
 ## CSV 欄位
 
 | 欄位 | 用途 |
 |---|---|
-| role | 固定使用 `student` |
-| classId | 學生班別代號，例如 `C01` |
-| studentId | 學生 ID，例如 `S0001` |
-| email | 可留空；系統會自動用 `scysps.C01.S0001@students.readingrun.invalid` |
-| pin | 學生登入密碼，最少 6 位 |
-| active | `true` 或 `false` |
+| `role` | 固定為 `student` |
+| `classId` | 班別代號，例如 `C01` |
+| `studentId` | 校內學生 ID，例如 `S0001` |
+| `email` | 通常留空，由工具按學年產生 Auth alias |
+| `pin` | 獨立、隨機、最少 12 字元密碼 |
+| `displayAlias` | 可留空；工具會產生不作登入用途的跑手代號 |
+| `active` | `true` 或 `false` |
 
-## Firebase 內需要有兩部分資料
+格式請參考 `users.example.csv`。範例內 `REPLACE_WITH_...` 是故意不可匯入的 placeholder；必須逐行換成不同的隨機密碼。正式 CSV 必須存於學校受管控、加密的暫存位置，完成匯入後按校方保存政策安全刪除。
 
-### 1. Firebase Authentication
+## 匯入學生
 
-每個學生都要有一個 Email/Password 帳戶。
+先以校方帳戶取得短期 ADC，例如由校方 IT 執行 `gcloud auth application-default login`，然後設定明確目標：
 
-例子：
-
-```text
-學生登入畫面：1A + S0001 + 123456
-Firebase Auth email：scysps.C01.S0001@students.readingrun.invalid
-Firebase Auth password：123456
-```
-
-### 2. Firestore users/{uid}
-
-每個 Firebase Auth 使用者 UID 都要有一個對應的 `users/{uid}` 文件：
-
-```text
-role: "student"
-classId: "C01"
-studentId: "S0001"
-active: true
-```
-
-如果 Firebase Auth 密碼正確，但 `users/{uid}` 的 `classId` 或 `studentId` 不吻合，學生仍然不能登入。
-
-## 用 CSV 匯入 Firebase
-
-1. 到 Firebase Console 下載 service account JSON。
-2. 把 JSON 放在本資料夾，命名為 `service-account.json`。
-3. 用 Excel 製作 `users.csv`，格式參考 `users.example.csv`。
-4. 執行：
-
-```bash
-cd admin-tools
+```powershell
+$env:FIREBASE_PROJECT_ID="SCHOOL_FIREBASE_PROJECT_ID"
+$env:READING_RUN_CONFIRM_PROJECT="SCHOOL_FIREBASE_PROJECT_ID"
+$env:READING_RUN_SCHOOL_YEAR="2026-2027"
+$env:READING_RUN_SCHOOL_CODE="scysps"
 npm install
-npm run import-users -- users.csv
+npm run import-users -- "C:\SchoolSecureTemp\users.csv"
 ```
 
-## CSV 例子
+工具會先完成兩層預檢，而且在兩層全部通過前不會寫入任何資料：
 
-```csv
-role,classId,studentId,email,pin,active
-student,C01,S0001,,123456,true
-student,C01,S0002,,234567,true
+1. 一次過驗證整份 CSV，拒絕 placeholder、少於 12 字元或重複密碼、重複 email，以及重複 `classId + studentId`。
+2. 只讀取所有相關 Auth、`users`、`students` 及 `publicStudents` 狀態，核對身份欄位、公開 alias 和既有 counters；任何衝突或讀取失敗都會令整次匯入在零 mutation 狀態停止。
+
+開始寫入後，單一學生的 Firestore batch 失敗時，工具會刪除剛建立的新 Auth user，讓同一份 CSV 可以安全重跑。若既有 Auth user 已更新但其 Firestore batch 失敗，或新 user 無法刪除，終端會在 `RECONCILIATION_REQUIRED_BEGIN` 與 `RECONCILIATION_REQUIRED_END` 之間輸出不含密碼的 JSON 清單，並以非零 exit code 結束。請保留該清單於校方事故紀錄、修正列出的 Firebase 錯誤，然後使用原本受保護的 CSV 重跑；不要把清單或 CSV 上載到 GitHub。
+
+匯入後應抽樣核對 Auth、`users/{uid}`、`students/{schoolYear}__{uid}` 及 `publicStudents/{schoolYear}__{uid}`，再用測試學生帳戶完成一次登入／提交／登出。
+
+## 建立教師帳戶
+
+教師密碼只可透過受保護的環境變數提供，不可放在命令列參數或 CSV：
+
+```powershell
+$env:FIREBASE_PROJECT_ID="SCHOOL_FIREBASE_PROJECT_ID"
+$env:READING_RUN_CONFIRM_PROJECT="SCHOOL_FIREBASE_PROJECT_ID"
+$env:READING_RUN_SCHOOL_YEAR="2026-2027"
+$env:READING_RUN_ALLOWED_TEACHER_DOMAINS="CONFIRMED_SCHOOL_OR_TWGH_EMAIL_DOMAIN"
+$env:READING_RUN_TEACHER_PASSWORD="USE_A_SCHOOL_APPROVED_SECRET"
+npm run create-teacher -- "teacher@twghscysps.edu.hk" "閱讀統籌老師"
 ```
 
-匯入後，學生可在 GitHub Pages 登入頁選 `1A`，學生 ID 填 `S0001`，登入密碼填 `123456`。
-
-## 不使用 CSV 時的手動建立方法
-
-你也可以在 Firebase Console 手動建立：
-
-1. Authentication → Users → Add user
-2. Email 填：`scysps.C01.S0001@students.readingrun.invalid`
-3. Password 填學生密碼，例如：`123456`
-4. 複製該學生的 Firebase UID
-5. Firestore → `users/{uid}` 建立同 UID 文件
-6. 加入：
-
-```text
-role: "student"
-classId: "C01"
-studentId: "S0001"
-active: true
-```
+請由校方 IT 先確認真正的職員電郵 domain；上述 domain 只作格式示例。建立後立即清除密碼環境變數、在校方 Identity/Firebase 管理介面強制 MFA，並按最小權限原則指派教師角色。不要使用私人電郵帳戶。

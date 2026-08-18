@@ -1,5 +1,6 @@
-// Security-only settings. Do not place student PINs or passwords here.
+// Fail-closed source template. Never place student or staff credentials here.
+// The allowlisted build generates the deployed values from school CI variables.
 export const securityConfig = {
-  schoolCode: "scysps",
-  appCheckSiteKey: "6LdgIUctAAAAAA8rGq1m7T19ospNn-jikog7bDuG",
+  schoolCode: "__SCHOOL_CODE__",
+  appCheckSiteKey: "__FIREBASE_APP_CHECK_SITE_KEY__",
 };

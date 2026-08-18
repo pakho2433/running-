@@ -183,9 +183,14 @@
 .history-list {
   display: grid;
   gap: 12px;
-  max-height: calc(86dvh - 180px);
+  max-height: calc(86dvh - 240px);
   overflow: auto;
-  padding: 18px 24px 26px;
+  padding: 18px 24px;
+}
+
+#readingHistoryLoadMore {
+  display: block;
+  margin: 12px auto 18px;
 }
 
 .history-record {

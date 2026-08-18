@@ -1,4 +1,4 @@
-role,classId,studentId,email,pin,active
-student,C01,S0001,,CHANGE_TO_UNIQUE_PIN,true
-student,C01,S0002,,CHANGE_TO_UNIQUE_PIN,true
-student,C02,S0001,,CHANGE_TO_UNIQUE_PIN,true
+role,classId,studentId,email,pin,displayAlias,active
+student,C01,S0001,,REPLACE_WITH_UNIQUE_RANDOM_PASSWORD_001,,true
+student,C01,S0002,,REPLACE_WITH_UNIQUE_RANDOM_PASSWORD_002,,true
+student,C02,S0001,,REPLACE_WITH_UNIQUE_RANDOM_PASSWORD_003,,true
