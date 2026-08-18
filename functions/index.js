@@ -8,11 +8,11 @@ import {
   DomainError,
   encodePageToken,
   nextStudentProgress,
-  parseReadingSubmission,
   parseStudentIdentity,
   parseTeacherPageRequest,
   readingLogId,
 } from "./lib/reading-domain.mjs";
+import { parseStagingReadingSubmission } from "./lib/staging-reading-domain.mjs";
 
 initializeApp();
 
@@ -22,7 +22,9 @@ const db = getFirestore();
 const SCHOOL_YEAR = DEFAULT_SCHOOL_YEAR;
 const FUNCTION_OPTIONS = Object.freeze({
   region: "asia-east2",
-  enforceAppCheck: true,
+  // STAGING ONLY: App Check is deliberately not enforced on this branch while
+  // browser App Check is being validated. The production branch keeps this true.
+  enforceAppCheck: false,
   timeoutSeconds: 30,
   memory: "256MiB",
   cpu: 1,
@@ -33,7 +35,7 @@ const FUNCTION_OPTIONS = Object.freeze({
 export const submitReadingLog = onCall(FUNCTION_OPTIONS, async (request) => {
   try {
     const uid = authenticatedUid(request);
-    const submission = parseReadingSubmission(request.data, {
+    const submission = parseStagingReadingSubmission(request.data, {
       now: new Date(),
       schoolYear: SCHOOL_YEAR,
     });
