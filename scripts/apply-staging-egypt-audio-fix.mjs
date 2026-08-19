@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const audioPath = path.join(root, "dist", "world-runway-audio.js");
 const stablePath = path.join(root, "dist", "world-runway-stable-interaction.js");
+const scenesPath = path.join(root, "dist", "country-scenes-secure.js");
+const AUDIO_VERSION = "20260820-audio-routing-2";
 
 function replaceOne(source, search, replacement, label) {
   const count = source.split(search).length - 1;
@@ -162,6 +164,12 @@ const newClick = `    const action = pickAction(event);
     }
     speak(action);`;
 stable = replaceOne(stable, oldClick, newClick, "stable person audio routing");
+stable = stable.replace(/\.\/world-runway-audio\.js\?v=[^\"']+/g, `./world-runway-audio.js?v=${AUDIO_VERSION}`);
 await writeFile(stablePath, stable, "utf8");
+
+let scenes = await readFile(scenesPath, "utf8");
+scenes = scenes.replace(/\.\/world-runway-audio\.js\?v=[^\"']+/g, `./world-runway-audio.js?v=${AUDIO_VERSION}`);
+scenes = scenes.replace(/\.\/world-runway-stable-interaction\.js\?v=[^\"']+/g, `./world-runway-stable-interaction.js?v=${AUDIO_VERSION}`);
+await writeFile(scenesPath, scenes, "utf8");
 
 console.log("✅ Applied staging Egypt audio fix: ar-EG + fallback + unified person-audio routing.");
