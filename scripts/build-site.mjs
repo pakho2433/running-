@@ -34,7 +34,7 @@ if (/daily-book-recommendation\.js/.test(indexHtml)) {
   throw new Error("index.html still loads the retired anonymous recommendation client.");
 }
 
-const readingBuddyTag = '<script type="module" src="./reading-buddy-bootstrap.js?v=20260819-reading-buddy-restore-2"></script>';
+const readingBuddyTag = '<script type="module" src="./reading-buddy-bootstrap.js?v=20260819-reading-date-fix-1"></script>';
 const readingDatePolicyTag = '<script type="module" src="./reading-date-policy-ui.js?v=20260819-backfill-14d-1"></script>';
 if (!indexHtml.includes("reading-buddy-bootstrap.js")) {
   if (!indexHtml.includes("</body>")) {
