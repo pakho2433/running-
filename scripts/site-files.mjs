@@ -14,6 +14,7 @@ export const COPIED_SITE_FILES = [
   "map-controls.js",
   "mobile-map-fix.css",
   "reading-buddy-bootstrap.js",
+  "reading-date-policy-ui.js",
   "reading-history.js",
   "reading-history-secure.js",
   "reset-all-v1.js",
