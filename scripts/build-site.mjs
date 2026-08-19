@@ -35,8 +35,8 @@ if (/daily-book-recommendation\.js/.test(indexHtml)) {
 }
 
 // Always replace previous staging module URLs so each deploy gets fresh browser
-// module URLs after quota or Reading Buddy logic changes.
-const appStageTag = '<script type="module" src="./app-stage.js?v=20260819-reading-date-only-1"></script>';
+// module URLs after quota, Reading Buddy, or staging identity UI changes.
+const appStageTag = '<script type="module" src="./app-stage.js?v=20260820-staging-names-1"></script>';
 const readingBuddyTag = '<script type="module" src="./reading-buddy-bootstrap.js?v=20260819-reading-date-fix-2"></script>';
 const readingDatePolicyTag = '<script type="module" src="./reading-date-policy-ui.js?v=20260819-reading-date-only-2"></script>';
 indexHtml = indexHtml.replace(
