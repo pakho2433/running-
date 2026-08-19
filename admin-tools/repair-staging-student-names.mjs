@@ -10,6 +10,7 @@ import { FieldValue, getFirestore } from "firebase-admin/firestore";
 const STAGING_PROJECT = "scysps-reading-stg-20260818-a";
 const SCHOOL_YEAR = "2026-2027";
 const SCHOOL_CODE = "scysps";
+const LEGACY_TEST001_SCHOOL_CODE = "twghscysps";
 
 // ASCII-only source representation on purpose: names are decoded from Unicode
 // escapes by Node.js at runtime, avoiding terminal/CSV locale corruption.
@@ -84,7 +85,8 @@ const db = getFirestore();
 
 const verified = [];
 for (const [classId, studentId, displayAlias] of ROSTER) {
-  const email = `${SCHOOL_CODE}.${SCHOOL_YEAR.replace(/[^0-9]/g, "")}.${classId}.${studentId}@students.readingrun.invalid`.toLowerCase();
+  const emailSchoolCode = studentId === "TEST001" ? LEGACY_TEST001_SCHOOL_CODE : SCHOOL_CODE;
+  const email = `${emailSchoolCode}.${SCHOOL_YEAR.replace(/[^0-9]/g, "")}.${classId}.${studentId}@students.readingrun.invalid`.toLowerCase();
   const user = await auth.getUserByEmail(email);
   const studentKey = `${SCHOOL_YEAR}__${user.uid}`;
   const [profileSnapshot, studentSnapshot, publicSnapshot] = await db.getAll(
