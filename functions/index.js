@@ -13,7 +13,6 @@ import {
 } from "./lib/reading-domain.mjs";
 import {
   READING_DATE_BOOK_LIMIT,
-  SUBMISSION_DAY_BOOK_LIMIT,
   nextReadingDateSequence,
 } from "./lib/reading-limit-policy.mjs";
 import { parseStagingReadingSubmission } from "./lib/staging-reading-domain.mjs";
@@ -91,8 +90,8 @@ export const submitReadingLog = onCall(FUNCTION_OPTIONS, async (request) => {
       const readingDateCount = Math.max(storedReadingDateCount, existingReadingDateLogs.size);
       const readingDateSequence = nextReadingDateSequence(readingDateCount);
 
-      // dailyDateKey/dailyBooksCount remain the server-authoritative actual
-      // submission-day counter. It resets on each new Hong Kong calendar day.
+      // The actual submission-day count is informational only. Staging has no
+      // submission-day quota: the enforced limit is five books per readingDate.
       const {
         dailySequence: submissionDaySequence,
         booksCountAfter,
@@ -100,7 +99,7 @@ export const submitReadingLog = onCall(FUNCTION_OPTIONS, async (request) => {
       } = nextStudentProgress(
         previous,
         submission,
-        SUBMISSION_DAY_BOOK_LIMIT,
+        Number.MAX_SAFE_INTEGER,
       );
 
       const timestamp = FieldValue.serverTimestamp();
