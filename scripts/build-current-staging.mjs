@@ -67,4 +67,13 @@ const result = spawnSync("npm", ["run", "build"], {
 });
 
 if (result.status !== 0) process.exit(result.status ?? 1);
+
+const hongKongPatch = spawnSync("node", ["scripts/apply-staging-hong-kong.mjs"], {
+  cwd: root,
+  env: environment,
+  stdio: "inherit",
+  shell: process.platform === "win32",
+});
+if (hongKongPatch.status !== 0) process.exit(hongKongPatch.status ?? 1);
+
 console.log(`✅ Rebuilt staging dist from ${baseUrl}`);
