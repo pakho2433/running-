@@ -66,6 +66,20 @@ if (!indexHtml.includes("reading-date-policy-ui.js")) {
 }
 await writeFile(indexPath, indexHtml, "utf8");
 
+// secure-password-ui-app dynamically imports the 3D track. Force a fresh module
+// URL in each staging build so runner-name label changes cannot be hidden by an
+// older browser cache entry.
+const secureAppPath = path.join(dist, "secure-password-ui-app.js");
+let secureAppSource = await readFile(secureAppPath, "utf8");
+secureAppSource = secureAppSource.replace(
+  /\.\/secure-track\.js\?v=[^"']+/u,
+  "./secure-track.js?v=20260820-runner-names-1",
+);
+if (!secureAppSource.includes("secure-track.js?v=20260820-runner-names-1")) {
+  throw new Error("Could not attach the runner-name 3D track module version.");
+}
+await writeFile(secureAppPath, secureAppSource, "utf8");
+
 const appConfigSource = await readFile(path.join(root, "app-config.js"), "utf8");
 if (!appConfigSource.includes("__SCHOOL_YEAR__") || !appConfigSource.includes("__SCHOOL_SITE_ORIGIN__")) {
   throw new Error("app-config.js must retain the school deployment placeholders.");
