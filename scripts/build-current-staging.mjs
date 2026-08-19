@@ -76,4 +76,12 @@ const hongKongPatch = spawnSync("node", ["scripts/apply-staging-hong-kong.mjs"],
 });
 if (hongKongPatch.status !== 0) process.exit(hongKongPatch.status ?? 1);
 
+const egyptAudioPatch = spawnSync("node", ["scripts/apply-staging-egypt-audio-fix.mjs"], {
+  cwd: root,
+  env: environment,
+  stdio: "inherit",
+  shell: process.platform === "win32",
+});
+if (egyptAudioPatch.status !== 0) process.exit(egyptAudioPatch.status ?? 1);
+
 console.log(`✅ Rebuilt staging dist from ${baseUrl}`);
