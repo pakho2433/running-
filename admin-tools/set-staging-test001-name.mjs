@@ -5,10 +5,10 @@ import { FieldValue, getFirestore } from "firebase-admin/firestore";
 
 const STAGING_PROJECT = "scysps-reading-stg-20260818-a";
 const SCHOOL_YEAR = "2026-2027";
-const SCHOOL_CODE = "scysps";
+const SCHOOL_CODE = "twghscysps";
 const CLASS_ID = "C01";
 const STUDENT_ID = "TEST001";
-const DISPLAY_NAME = "陳悅晴";
+const DISPLAY_NAME = "\u9673\u6085\u6674";
 
 const projectId = String(process.env.FIREBASE_PROJECT_ID || "").trim();
 const confirmation = String(process.env.READING_RUN_CONFIRM_PROJECT || "").trim();
