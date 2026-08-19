@@ -5,6 +5,9 @@ import {
   parseReadingSubmission,
   payloadFingerprint,
 } from "./reading-domain.mjs";
+import {
+  earliestAllowedReadingDate,
+} from "./reading-limit-policy.mjs";
 
 // STAGING ONLY: allow August 2026 end-to-end testing before the 2026-2027
 // academic year opens. The production branch does not import this module.
@@ -15,23 +18,31 @@ export function parseStagingReadingSubmission(input, options = {}) {
   const now = options.now || new Date();
   const submissionDateKey = hongKongDateKey(now);
   const bounds = academicYearBounds(schoolYear);
+  const floorDateKey = submissionDateKey >= bounds.firstDate
+    ? bounds.firstDate
+    : STAGING_PREOPEN_FIRST_DATE;
+  const earliestDateKey = earliestAllowedReadingDate(submissionDateKey, floorDateKey);
+  const readingDate = String(input?.readingDate || submissionDateKey).trim();
 
-  // Once the real academic year starts, use the production parser unchanged.
+  if (!isRealDateKey(readingDate)) {
+    throw new DomainError("invalid-argument", "readingDate must be a real date in YYYY-MM-DD format.");
+  }
+  if (readingDate < earliestDateKey || readingDate > submissionDateKey) {
+    throw new DomainError(
+      "invalid-argument",
+      "readingDate must be within the most recent 14 days and not in the future.",
+    );
+  }
+
+  // Once the real academic year starts, reuse every production validation and
+  // score rule after the staging-only 14-day window has been checked.
   if (submissionDateKey >= bounds.firstDate) {
     return parseReadingSubmission(input, { ...options, now, schoolYear });
   }
 
-  // Keep the bypass deliberately narrow: August 2026 only.
+  // Keep the pre-open bypass deliberately narrow: August 2026 only.
   if (submissionDateKey < STAGING_PREOPEN_FIRST_DATE) {
     return parseReadingSubmission(input, { ...options, now, schoolYear });
-  }
-
-  const readingDate = String(input?.readingDate || submissionDateKey).trim();
-  if (!isRealDateKey(readingDate)) {
-    throw new DomainError("invalid-argument", "readingDate must be a real date in YYYY-MM-DD format.");
-  }
-  if (readingDate < STAGING_PREOPEN_FIRST_DATE || readingDate > submissionDateKey) {
-    throw new DomainError("invalid-argument", "readingDate must be within the staging pre-open window and not in the future.");
   }
 
   // Reuse the production parser for every other validation and score rule by
