@@ -18,6 +18,13 @@ export function parseStagingReadingSubmission(input, options = {}) {
   const now = options.now || new Date();
   const submissionDateKey = hongKongDateKey(now);
   const bounds = academicYearBounds(schoolYear);
+
+  // Preserve the original staging safety boundary: before the explicit August
+  // pre-open window, staging remains closed exactly like production.
+  if (submissionDateKey < STAGING_PREOPEN_FIRST_DATE) {
+    return parseReadingSubmission(input, { ...options, now, schoolYear });
+  }
+
   const floorDateKey = submissionDateKey >= bounds.firstDate
     ? bounds.firstDate
     : STAGING_PREOPEN_FIRST_DATE;
@@ -37,11 +44,6 @@ export function parseStagingReadingSubmission(input, options = {}) {
   // Once the real academic year starts, reuse every production validation and
   // score rule after the staging-only 14-day window has been checked.
   if (submissionDateKey >= bounds.firstDate) {
-    return parseReadingSubmission(input, { ...options, now, schoolYear });
-  }
-
-  // Keep the pre-open bypass deliberately narrow: August 2026 only.
-  if (submissionDateKey < STAGING_PREOPEN_FIRST_DATE) {
     return parseReadingSubmission(input, { ...options, now, schoolYear });
   }
 
