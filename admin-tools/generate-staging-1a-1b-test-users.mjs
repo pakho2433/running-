@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 // STAGING TEST DATA ONLY. All display names below are fictional.
 // 1A total = existing TEST001 + 25 generated accounts.
@@ -28,7 +29,7 @@ const CLASS_1B = Object.freeze([
   ["TEST125", "伍俊希"], ["TEST126", "莫心妍"],
 ]);
 
-const outputDir = path.resolve(process.cwd(), "admin-tools");
+const outputDir = path.dirname(fileURLToPath(import.meta.url));
 const importPath = path.join(outputDir, "staging-1a-1b-users.private.csv");
 const loginSheetPath = path.join(outputDir, "staging-1a-1b-login-sheet.private.csv");
 const existingTest001Password = String(process.env.READING_RUN_TEST001_PASSWORD || "").trim();
