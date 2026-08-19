@@ -6,9 +6,10 @@ import { fileURLToPath } from "node:url";
 const sourcePath = fileURLToPath(new URL("../index.js", import.meta.url));
 const source = await readFile(sourcePath, "utf8");
 
-test("callables enforce App Check in the Hong Kong region", () => {
+test("staging callables use the Hong Kong region with App Check temporarily disabled", () => {
   assert.match(source, /region: "asia-east2"/u);
-  assert.match(source, /enforceAppCheck: true/u);
+  assert.match(source, /enforceAppCheck: false/u);
+  assert.match(source, /STAGING ONLY: App Check is deliberately not enforced/u);
   assert.match(source, /export const submitReadingLog = onCall/u);
   assert.match(source, /export const getTeacherLogsPage = onCall/u);
 });
