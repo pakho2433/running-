@@ -35,14 +35,24 @@ if (/daily-book-recommendation\.js/.test(indexHtml)) {
 }
 
 const readingBuddyTag = '<script type="module" src="./reading-buddy-bootstrap.js?v=20260819-reading-buddy-restore-2"></script>';
+const readingDatePolicyTag = '<script type="module" src="./reading-date-policy-ui.js?v=20260819-backfill-14d-1"></script>';
 if (!indexHtml.includes("reading-buddy-bootstrap.js")) {
   if (!indexHtml.includes("</body>")) {
     throw new Error("index.html is missing </body>; cannot attach Reading Buddy bootstrap.");
   }
   indexHtml = indexHtml.replace("</body>", `${readingBuddyTag}</body>`);
 }
+if (!indexHtml.includes("reading-date-policy-ui.js")) {
+  if (!indexHtml.includes("</body>")) {
+    throw new Error("index.html is missing </body>; cannot attach reading date policy UI.");
+  }
+  indexHtml = indexHtml.replace("</body>", `${readingDatePolicyTag}</body>`);
+}
 if (!indexHtml.includes("reading-buddy-bootstrap.js")) {
   throw new Error("Reading Buddy bootstrap was not attached to index.html.");
+}
+if (!indexHtml.includes("reading-date-policy-ui.js")) {
+  throw new Error("Reading date policy UI was not attached to index.html.");
 }
 await writeFile(indexPath, indexHtml, "utf8");
 
