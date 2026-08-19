@@ -22,6 +22,7 @@ export const COPIED_SITE_FILES = [
   "secure-password-ui-app.js",
   "secure-track.js",
   "stage-fix.css",
+  "student-name-ui.js",
   "styles.css",
   "teacher-dashboard.css",
   "three-reading-wrapper.js",
