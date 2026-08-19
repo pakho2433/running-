@@ -6,7 +6,6 @@ import {
 import {
   READING_BACKFILL_DAYS,
   READING_DATE_BOOK_LIMIT,
-  SUBMISSION_DAY_BOOK_LIMIT,
   earliestAllowedReadingDate,
   nextReadingDateSequence,
 } from "../lib/reading-limit-policy.mjs";
@@ -56,23 +55,18 @@ test("each reading date stops at five books", () => {
   );
 });
 
-test("actual submission day stops at ten books", () => {
-  assert.equal(SUBMISSION_DAY_BOOK_LIMIT, 10);
+test("actual submission day is informational and can exceed ten books", () => {
   const submission = {
     submissionDateKey: "2026-08-19",
     distanceAwarded: 120,
   };
-  assert.equal(nextStudentProgress({
-    booksCount: 20,
-    distance: 2400,
-    dailyDateKey: "2026-08-19",
-    dailyBooksCount: 9,
-  }, submission, SUBMISSION_DAY_BOOK_LIMIT).dailySequence, 10);
-
-  assert.throws(() => nextStudentProgress({
+  const result = nextStudentProgress({
     booksCount: 21,
     distance: 2520,
     dailyDateKey: "2026-08-19",
     dailyBooksCount: 10,
-  }, submission, SUBMISSION_DAY_BOOK_LIMIT), (error) => error.code === "resource-exhausted");
+  }, submission, Number.MAX_SAFE_INTEGER);
+  assert.equal(result.dailySequence, 11);
+  assert.equal(result.booksCountAfter, 22);
+  assert.equal(result.distanceAfter, 2640);
 });
