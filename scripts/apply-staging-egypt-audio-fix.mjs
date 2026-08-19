@@ -3,7 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const filePath = path.join(root, "dist", "world-runway-audio.js");
+const audioPath = path.join(root, "dist", "world-runway-audio.js");
+const stablePath = path.join(root, "dist", "world-runway-stable-interaction.js");
 
 function replaceOne(source, search, replacement, label) {
   const count = source.split(search).length - 1;
@@ -11,7 +12,7 @@ function replaceOne(source, search, replacement, label) {
   return source.replace(search, replacement);
 }
 
-let source = await readFile(filePath, "utf8");
+let source = await readFile(audioPath, "utf8");
 
 source = replaceOne(
   source,
@@ -134,6 +135,33 @@ const newFindVoice = `function findVoice(lang, voices = window.speechSynthesis?.
 }`;
 
 source = replaceOne(source, oldFindVoice, newFindVoice, "local voice preference");
+source = replaceOne(
+  source,
+  "  synth.speak(utterance);\n}\n\nfunction warmUpVoices()",
+  "  synth.speak(utterance);\n}\n\nwindow.__readingRunPlayAudioAction = playAudioAction;\n\nfunction warmUpVoices()",
+  "publish reliable audio player",
+);
 
-await writeFile(filePath, source, "utf8");
-console.log("✅ Applied staging Egypt audio fix: ar-EG + reliable fallback.");
+await writeFile(audioPath, source, "utf8");
+
+let stable = await readFile(stablePath, "utf8");
+const oldClick = `    const action = pickAction(event);
+    if (!action) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+    speak(action);`;
+const newClick = `    const action = pickAction(event);
+    if (!action) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+    if (action.type === "person" && typeof window.__readingRunPlayAudioAction === "function") {
+      void window.__readingRunPlayAudioAction(action);
+      return;
+    }
+    speak(action);`;
+stable = replaceOne(stable, oldClick, newClick, "stable person audio routing");
+await writeFile(stablePath, stable, "utf8");
+
+console.log("✅ Applied staging Egypt audio fix: ar-EG + fallback + unified person-audio routing.");
