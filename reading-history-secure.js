@@ -124,7 +124,9 @@ function card(record, index) {
   const meta = document.createElement("div");
   meta.className = "history-record-meta";
   [
-    record.submissionDateKey || record.readingDate || "日期未有資料",
+    // Reading Buddy must show the date the student actually read the book.
+    // submissionDateKey is only a fallback for legacy records that pre-date readingDate.
+    record.readingDate || record.submissionDateKey || "日期未有資料",
     record.readingType || "未選讀物類別",
     record.subject || "未選科目",
     record.completed === "yes" ? "已完成" : "未完成",
