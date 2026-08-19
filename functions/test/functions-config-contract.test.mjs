@@ -4,7 +4,9 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const sourcePath = fileURLToPath(new URL("../index.js", import.meta.url));
+const historySourcePath = fileURLToPath(new URL("../../reading-history-secure.js", import.meta.url));
 const source = await readFile(sourcePath, "utf8");
+const historySource = await readFile(historySourcePath, "utf8");
 
 test("staging callables use the Hong Kong region with App Check temporarily disabled", () => {
   assert.match(source, /region: "asia-east2"/u);
@@ -26,4 +28,15 @@ test("reading-date limit reconciles counters with persisted logs before allowing
   assert.match(source, /limit\(READING_DATE_BOOK_LIMIT\)/u);
   assert.match(source, /Math\.max\(storedReadingDateCount, existingReadingDateLogs\.size\)/u);
   assert.match(source, /nextReadingDateSequence\(readingDateCount\)/u);
+});
+
+test("Reading Buddy displays the actual reading date before any submission-date fallback", () => {
+  assert.match(
+    historySource,
+    /record\.readingDate \|\| record\.submissionDateKey \|\| "日期未有資料"/u,
+  );
+  assert.doesNotMatch(
+    historySource,
+    /record\.submissionDateKey \|\| record\.readingDate/u,
+  );
 });
