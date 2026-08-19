@@ -225,16 +225,19 @@ export async function saveReading(user, record) {
       idempotent: result.idempotent === true,
       schoolYear: String(result.schoolYear || SCHOOL_YEAR),
       submissionDateKey: String(result.submissionDateKey || ""),
-      count: Number(result.count || 0),
+      submissionDayCount: Number(result.submissionDayCount || result.count || 0),
+      count: Number(result.submissionDayCount || result.count || 0),
+      readingDate: String(result.readingDate || record.readingDate || ""),
+      readingDateCount: Number(result.readingDateCount || 0),
       distance: Number(result.distance || 0),
       booksCount: Number(result.booksCount || 0),
       totalDistance: Number(result.totalDistance || 0),
     };
   } catch (error) {
     const code = callableErrorCode(error);
-    if (code === "resource-exhausted" || error?.message === "DAILY_LIMIT") {
+    if (code === "resource-exhausted" || error?.message === "READING_DATE_LIMIT") {
       clearPendingSubmission();
-      throw new Error("DAILY_LIMIT");
+      throw new Error("READING_DATE_LIMIT");
     }
     if (["invalid-argument", "failed-precondition", "permission-denied", "unauthenticated"].includes(code)) {
       clearPendingSubmission();
