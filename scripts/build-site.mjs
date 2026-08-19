@@ -34,21 +34,29 @@ if (/daily-book-recommendation\.js/.test(indexHtml)) {
   throw new Error("index.html still loads the retired anonymous recommendation client.");
 }
 
-// Always replace any previous Reading Buddy bootstrap tag so each deploy gets a
-// fresh URL. This avoids a cached bootstrap continuing to import an older
-// reading-history-secure.js after the history rendering logic has changed.
+// Always replace previous staging module URLs so each deploy gets fresh browser
+// module URLs after quota or Reading Buddy logic changes.
+const appStageTag = '<script type="module" src="./app-stage.js?v=20260819-reading-date-only-1"></script>';
 const readingBuddyTag = '<script type="module" src="./reading-buddy-bootstrap.js?v=20260819-reading-date-fix-2"></script>';
-const readingDatePolicyTag = '<script type="module" src="./reading-date-policy-ui.js?v=20260819-backfill-14d-1"></script>';
+const readingDatePolicyTag = '<script type="module" src="./reading-date-policy-ui.js?v=20260819-reading-date-only-2"></script>';
+indexHtml = indexHtml.replace(
+  /<script\s+type="module"\s+src="\.\/app-stage\.js[^"]*"><\/script>/g,
+  ""
+);
 indexHtml = indexHtml.replace(
   /<script\s+type="module"\s+src="\.\/reading-buddy-bootstrap\.js[^"]*"><\/script>/g,
+  ""
+);
+indexHtml = indexHtml.replace(
+  /<script\s+type="module"\s+src="\.\/reading-date-policy-ui\.js[^"]*"><\/script>/g,
   ""
 );
 if (!indexHtml.includes("</body>")) {
   throw new Error("index.html is missing </body>; cannot attach staging modules.");
 }
-indexHtml = indexHtml.replace("</body>", `${readingBuddyTag}</body>`);
-if (!indexHtml.includes("reading-date-policy-ui.js")) {
-  indexHtml = indexHtml.replace("</body>", `${readingDatePolicyTag}</body>`);
+indexHtml = indexHtml.replace("</body>", `${appStageTag}${readingBuddyTag}${readingDatePolicyTag}</body>`);
+if (!indexHtml.includes("app-stage.js")) {
+  throw new Error("Staging app module was not attached to index.html.");
 }
 if (!indexHtml.includes("reading-buddy-bootstrap.js")) {
   throw new Error("Reading Buddy bootstrap was not attached to index.html.");
