@@ -22,7 +22,6 @@ export const APP_CONFIG = {
   trackDistance: 15000,
   stageDistance: 1500,
   trackLocations: 10,
-  dailyBookLimit: 10,
   readingDateBookLimit: 5,
   readingBackfillDays: 14,
   schoolTimeZone: "Asia/Hong_Kong",
