@@ -3,7 +3,6 @@ import { FieldPath, FieldValue, Timestamp, getFirestore } from "firebase-admin/f
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
 import {
-  DAILY_BOOK_LIMIT,
   DEFAULT_SCHOOL_YEAR,
   DomainError,
   encodePageToken,
@@ -12,6 +11,11 @@ import {
   parseTeacherPageRequest,
   readingLogId,
 } from "./lib/reading-domain.mjs";
+import {
+  READING_DATE_BOOK_LIMIT,
+  SUBMISSION_DAY_BOOK_LIMIT,
+  nextReadingDateSequence,
+} from "./lib/reading-limit-policy.mjs";
 import { parseStagingReadingSubmission } from "./lib/staging-reading-domain.mjs";
 
 initializeApp();
@@ -67,11 +71,38 @@ export const submitReadingLog = onCall(FUNCTION_OPTIONS, async (request) => {
       const previous = studentSnapshot.exists ? studentSnapshot.data() : {};
       validateExistingStudent(previous, identity);
 
-      const { dailySequence, booksCountAfter, distanceAfter } = nextStudentProgress(
+      const readingDateCounterRef = db.doc(
+        `readingDateCounters/${identity.studentKey}__${submission.record.readingDate}`,
+      );
+      const readingDateCounterSnapshot = await transaction.get(readingDateCounterRef);
+      let readingDateCount;
+      if (readingDateCounterSnapshot.exists) {
+        readingDateCount = counterDocumentCount(readingDateCounterSnapshot.data());
+      } else {
+        // Migration-safe seed: existing staging logs created before the counter
+        // documents were introduced still count toward the five-book date limit.
+        const existingReadingDateLogs = await transaction.get(
+          db.collection("bookLogs")
+            .where("studentKey", "==", identity.studentKey)
+            .where("readingDate", "==", submission.record.readingDate)
+            .limit(READING_DATE_BOOK_LIMIT),
+        );
+        readingDateCount = existingReadingDateLogs.size;
+      }
+      const readingDateSequence = nextReadingDateSequence(readingDateCount);
+
+      // dailyDateKey/dailyBooksCount remain the server-authoritative actual
+      // submission-day counter. It resets on each new Hong Kong calendar day.
+      const {
+        dailySequence: submissionDaySequence,
+        booksCountAfter,
+        distanceAfter,
+      } = nextStudentProgress(
         previous,
         submission,
-        DAILY_BOOK_LIMIT,
+        SUBMISSION_DAY_BOOK_LIMIT,
       );
+
       const timestamp = FieldValue.serverTimestamp();
       const log = {
         authUid: uid,
@@ -87,7 +118,9 @@ export const submitReadingLog = onCall(FUNCTION_OPTIONS, async (request) => {
         completed: submission.record.completed,
         distanceAwarded: submission.distanceAwarded,
         submissionDateKey: submission.submissionDateKey,
-        dailySequence,
+        dailySequence: submissionDaySequence,
+        submissionDaySequence,
+        readingDateSequence,
         booksCountAfter,
         distanceAfter,
         idempotencyKeyHash: logId.split("__").at(-1),
@@ -105,13 +138,22 @@ export const submitReadingLog = onCall(FUNCTION_OPTIONS, async (request) => {
         distance: distanceAfter,
         lastBook: submission.record.title,
         lastAuthor: submission.record.author,
+        lastReadingDate: submission.record.readingDate,
         dailyDateKey: submission.submissionDateKey,
-        dailyBooksCount: dailySequence,
+        dailyBooksCount: submissionDaySequence,
         updatedAt: timestamp,
       };
       if (!studentSnapshot.exists) privateProgress.createdAt = timestamp;
 
       transaction.create(logRef, log);
+      transaction.set(readingDateCounterRef, {
+        authUid: uid,
+        studentKey: identity.studentKey,
+        schoolYear: SCHOOL_YEAR,
+        readingDate: submission.record.readingDate,
+        count: readingDateSequence,
+        updatedAt: timestamp,
+      }, { merge: true });
       transaction.set(studentRef, privateProgress, { merge: true });
       transaction.set(publicRef, {
         schoolYear: SCHOOL_YEAR,
@@ -217,13 +259,26 @@ function validateExistingStudent(previous, identity) {
   }
 }
 
+function counterDocumentCount(data) {
+  const count = data?.count;
+  if (!Number.isSafeInteger(count) || count < 0) {
+    throw new DomainError("failed-precondition", "Stored reading-date count is invalid.");
+  }
+  return count;
+}
+
 function submissionResponse(logId, log, idempotent) {
+  const submissionDayCount = Number(log.submissionDaySequence ?? log.dailySequence ?? 0);
+  const readingDateCount = Number(log.readingDateSequence ?? 0);
   return {
     logId,
     idempotent,
     schoolYear: log.schoolYear,
     submissionDateKey: log.submissionDateKey,
-    count: log.dailySequence,
+    count: submissionDayCount,
+    submissionDayCount,
+    readingDateCount,
+    readingDate: log.readingDate,
     distance: log.distanceAwarded,
     booksCount: log.booksCountAfter,
     totalDistance: log.distanceAfter,
@@ -246,6 +301,8 @@ function teacherLog(id, data) {
     distanceAwarded: Number(data.distanceAwarded || 0),
     submissionDateKey: String(data.submissionDateKey || ""),
     dailySequence: Number(data.dailySequence || 0),
+    submissionDaySequence: Number(data.submissionDaySequence || data.dailySequence || 0),
+    readingDateSequence: Number(data.readingDateSequence || 0),
     createdAt: data.createdAt?.toDate?.().toISOString?.() || null,
   };
 }
