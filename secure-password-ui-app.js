@@ -1,5 +1,5 @@
 import { APP_CONFIG } from "./app-config.js";
-import { initialiseSecurity, loadTeacherDashboardData, loadTeacherLogsPage, loginStudent, loginTeacher, logoutStudent, restoreStudent, restoreTeacher, saveReading, schoolDateKey, scoreReading, subscribeStudent } from "./secure-data-service.js?v=20260818-school-1";
+import { initialiseSecurity, loadTeacherDashboardData, loadTeacherLogsPage, loginStudent, loginTeacher, logoutStudent, restoreStudent, restoreTeacher, saveReading, schoolDateKey, scoreReading, subscribeStudent } from "./secure-data-service.js?v=20260819-reading-date-only-1";
 
 const $ = (selector) => document.querySelector(selector);
 const dom = {
@@ -268,7 +268,7 @@ async function handleLogout() {
 async function handleBook(event) {
   event.preventDefault();
   if (!state.user || state.saving) return;
-  if (!navigator.onLine) return toast("為保障每日上限，請連接網絡後再提交。", true);
+  if (!navigator.onLine) return toast("為保障每個閱讀日期最多 5 本，請連接網絡後再提交。", true);
   const record = readRecord();
   if (!record.title || !record.author) return toast("請輸入書本名稱及作者名稱。", true);
   state.saving = true;
@@ -282,18 +282,18 @@ async function handleBook(event) {
       distance: result.totalDistance || Number(state.student?.distance || 0) + result.distance,
       lastBook: record.title,
       lastAuthor: record.author,
-      dailyBooksCount: result.count,
+      dailyBooksCount: result.submissionDayCount,
       dailyDateKey: result.submissionDateKey || schoolDateKey(),
     };
     state.classmates = mergeCurrentStudent(state.classmates, state.user, state.student);
     render();
     clearForm();
     sync("saved", "● 已安全儲存");
-    toast(`《${record.title}》已記錄，今日 ${result.count} / ${APP_CONFIG.dailyBookLimit || 5} 本。`);
+    toast(`《${record.title}》已記錄；閱讀日期 ${result.readingDate || record.readingDate}：${result.readingDateCount} / ${APP_CONFIG.readingDateBookLimit || 5} 本。`);
   } catch (error) {
     console.error(error);
     sync("error", "● 儲存失敗");
-    toast(error?.message === "DAILY_LIMIT" ? "今日已達 5 本上限。" : "未能儲存，請稍後再試。", true);
+    toast(error?.message === "READING_DATE_LIMIT" ? "此閱讀日期已達 5 本上限，請選擇其他閱讀日期。" : "未能儲存，請稍後再試。", true);
   } finally {
     state.saving = false;
     if (dom.bookSubmit) dom.bookSubmit.disabled = false;
@@ -405,7 +405,7 @@ function renderStudentRows(students) {
       student.booksCount,
       student.distance,
       student.lastBook || "—",
-      student.dailyBooksCount ? `${student.dailyBooksCount} / ${APP_CONFIG.dailyBookLimit || 5}` : "0",
+      student.dailyBooksCount || 0,
       student.dailyDateKey || "—",
     ].forEach((value) => tr.append(td(value)));
     return tr;
