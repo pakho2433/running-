@@ -8,6 +8,7 @@
     "generate-staging-test-users": "node generate-staging-1a-1b-test-users.mjs",
     "set-staging-test001-name": "node set-staging-test001-name.mjs",
     "repair-staging-student-names": "node repair-staging-student-names.mjs",
+    "migrate-staging-student-auth-emails": "node migrate-staging-student-auth-emails.mjs",
     "test": "node --test"
   },
   "dependencies": {
