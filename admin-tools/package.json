@@ -5,6 +5,8 @@
   "scripts": {
     "import-users": "node import-users-from-csv.mjs",
     "create-teacher": "node create-teacher.mjs",
+    "generate-staging-test-users": "node generate-staging-1a-1b-test-users.mjs",
+    "set-staging-test001-name": "node set-staging-test001-name.mjs",
     "test": "node --test"
   },
   "dependencies": {
