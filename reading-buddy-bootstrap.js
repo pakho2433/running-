@@ -39,4 +39,4 @@ if (sidebar && !document.querySelector("#readingBuddyButton")) {
   else sidebar.append(panel);
 }
 
-await import("./reading-history-secure.js?v=20260819-reading-buddy-restore-1");
+await import("./reading-history-secure.js?v=20260819-reading-date-fix-1");
