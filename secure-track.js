@@ -63,8 +63,15 @@ export class SecureTrack {
       this.scene.remove(runner);
       runner.traverse((object) => {
         object.geometry?.dispose?.();
-        if (Array.isArray(object.material)) object.material.forEach((item) => item.dispose?.());
-        else object.material?.dispose?.();
+        if (Array.isArray(object.material)) {
+          object.material.forEach((item) => {
+            item.map?.dispose?.();
+            item.dispose?.();
+          });
+        } else {
+          object.material?.map?.dispose?.();
+          object.material?.dispose?.();
+        }
       });
     });
 
@@ -82,8 +89,16 @@ export class SecureTrack {
       torso.position.y = 2.2;
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.43, 14, 12), skin);
       head.position.y = 3.4;
-      group.add(torso, head);
-      group.userData = { phase: index * 0.7, torso, baseY: group.position.y };
+
+      const nameLabel = createNameLabel(student.displayAlias, current);
+      nameLabel.position.set(0, 4.65, 0);
+      group.add(torso, head, nameLabel);
+      group.userData = {
+        phase: index * 0.7,
+        torso,
+        nameLabel,
+        baseY: group.position.y,
+      };
       this.scene.add(group);
       return group;
     });
@@ -104,7 +119,76 @@ export class SecureTrack {
     this.runners.forEach((runner) => {
       runner.position.y = runner.userData.baseY + Math.abs(Math.sin(time * 6 + runner.userData.phase)) * 0.12;
       runner.userData.torso.rotation.z = Math.sin(time * 3 + runner.userData.phase) * 0.05;
+
+      // Keep labels readable while zooming or rotating the camera. THREE.Sprite
+      // already faces the camera; this modest distance compensation prevents
+      // far-away runners' names from becoming illegibly tiny.
+      const label = runner.userData.nameLabel;
+      if (label) {
+        const distance = this.camera.position.distanceTo(runner.position);
+        const factor = THREE.MathUtils.clamp(distance / 48, 0.85, 1.75);
+        label.scale.set(label.userData.baseWidth * factor, label.userData.baseHeight * factor, 1);
+      }
     });
     this.renderer.render(this.scene, this.camera);
   };
+}
+
+function createNameLabel(displayAlias, current) {
+  const text = String(displayAlias || "同學").trim().slice(0, 10) || "同學";
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const fontSize = Math.round(34 * pixelRatio);
+  const horizontalPadding = Math.round(22 * pixelRatio);
+  const verticalPadding = Math.round(13 * pixelRatio);
+  const radius = Math.round(16 * pixelRatio);
+
+  context.font = `700 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif`;
+  const measured = Math.ceil(context.measureText(text).width);
+  canvas.width = Math.max(Math.round(150 * pixelRatio), measured + horizontalPadding * 2);
+  canvas.height = fontSize + verticalPadding * 2;
+
+  context.font = `700 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  roundedRect(context, 1, 1, canvas.width - 2, canvas.height - 2, radius);
+  context.fillStyle = current ? "rgba(255, 247, 202, 0.96)" : "rgba(255, 255, 255, 0.94)";
+  context.fill();
+  context.lineWidth = Math.max(2, Math.round(2 * pixelRatio));
+  context.strokeStyle = current ? "rgba(202, 145, 0, 0.95)" : "rgba(25, 74, 104, 0.72)";
+  context.stroke();
+  context.fillStyle = "#153b57";
+  context.fillText(text, canvas.width / 2, canvas.height / 2 + pixelRatio);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const sprite = new THREE.Sprite(material);
+  const baseHeight = current ? 1.65 : 1.5;
+  const baseWidth = baseHeight * (canvas.width / canvas.height);
+  sprite.scale.set(baseWidth, baseHeight, 1);
+  sprite.renderOrder = 1000;
+  sprite.userData = { baseWidth, baseHeight };
+  return sprite;
+}
+
+function roundedRect(context, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.arcTo(x + width, y, x + width, y + height, r);
+  context.arcTo(x + width, y + height, x, y + height, r);
+  context.arcTo(x, y + height, x, y, r);
+  context.arcTo(x, y, x + width, y, r);
+  context.closePath();
 }
