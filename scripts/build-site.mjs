@@ -34,18 +34,20 @@ if (/daily-book-recommendation\.js/.test(indexHtml)) {
   throw new Error("index.html still loads the retired anonymous recommendation client.");
 }
 
-const readingBuddyTag = '<script type="module" src="./reading-buddy-bootstrap.js?v=20260819-reading-date-fix-1"></script>';
+// Always replace any previous Reading Buddy bootstrap tag so each deploy gets a
+// fresh URL. This avoids a cached bootstrap continuing to import an older
+// reading-history-secure.js after the history rendering logic has changed.
+const readingBuddyTag = '<script type="module" src="./reading-buddy-bootstrap.js?v=20260819-reading-date-fix-2"></script>';
 const readingDatePolicyTag = '<script type="module" src="./reading-date-policy-ui.js?v=20260819-backfill-14d-1"></script>';
-if (!indexHtml.includes("reading-buddy-bootstrap.js")) {
-  if (!indexHtml.includes("</body>")) {
-    throw new Error("index.html is missing </body>; cannot attach Reading Buddy bootstrap.");
-  }
-  indexHtml = indexHtml.replace("</body>", `${readingBuddyTag}</body>`);
+indexHtml = indexHtml.replace(
+  /<script\s+type="module"\s+src="\.\/reading-buddy-bootstrap\.js[^"]*"><\/script>/g,
+  ""
+);
+if (!indexHtml.includes("</body>")) {
+  throw new Error("index.html is missing </body>; cannot attach staging modules.");
 }
+indexHtml = indexHtml.replace("</body>", `${readingBuddyTag}</body>`);
 if (!indexHtml.includes("reading-date-policy-ui.js")) {
-  if (!indexHtml.includes("</body>")) {
-    throw new Error("index.html is missing </body>; cannot attach reading date policy UI.");
-  }
   indexHtml = indexHtml.replace("</body>", `${readingDatePolicyTag}</body>`);
 }
 if (!indexHtml.includes("reading-buddy-bootstrap.js")) {
