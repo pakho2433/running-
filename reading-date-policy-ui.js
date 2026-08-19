@@ -3,7 +3,6 @@ import { APP_CONFIG } from "./app-config.js";
 const input = document.querySelector("#readingDate");
 const backfillDays = Math.max(1, Number(APP_CONFIG.readingBackfillDays || 14));
 const readingDateLimit = Math.max(1, Number(APP_CONFIG.readingDateBookLimit || 5));
-const submissionDayLimit = Math.max(1, Number(APP_CONFIG.dailyBookLimit || 10));
 
 if (input) {
   const today = schoolDateKey();
@@ -20,16 +19,17 @@ if (input) {
   if (label) label.textContent = `閱讀日期（可補填最近 ${backfillDays} 日）`;
 }
 
-// The main UI still has a legacy generic daily-limit toast. Replace only that
-// exact legacy text so either server-side limit is described accurately.
+// Defensive compatibility for any cached legacy UI message. Staging now has no
+// actual-submission-day cap; only the selected reading date is limited to five.
 const toastRegion = document.querySelector("#toastRegion");
 if (toastRegion) {
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
         if (!(node instanceof HTMLElement)) continue;
-        if (node.textContent?.trim() === "今日已達 5 本上限。") {
-          node.textContent = `已達提交限制：同一閱讀日期最多 ${readingDateLimit} 本；每日最多提交 ${submissionDayLimit} 本。`;
+        const text = node.textContent?.trim() || "";
+        if (text === "今日已達 5 本上限。" || text.startsWith("已達提交限制：")) {
+          node.textContent = `此閱讀日期已達 ${readingDateLimit} 本上限，請選擇其他閱讀日期。`;
         }
       }
     }
