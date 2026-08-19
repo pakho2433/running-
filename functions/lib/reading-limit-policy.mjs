@@ -2,7 +2,6 @@ import { DomainError } from "./reading-domain.mjs";
 
 export const READING_BACKFILL_DAYS = 14;
 export const READING_DATE_BOOK_LIMIT = 5;
-export const SUBMISSION_DAY_BOOK_LIMIT = 10;
 
 export function earliestAllowedReadingDate(submissionDateKey, floorDateKey) {
   const rollingStart = shiftDateKey(submissionDateKey, -(READING_BACKFILL_DAYS - 1));
