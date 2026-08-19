@@ -75,20 +75,20 @@ export const submitReadingLog = onCall(FUNCTION_OPTIONS, async (request) => {
         `readingDateCounters/${identity.studentKey}__${submission.record.readingDate}`,
       );
       const readingDateCounterSnapshot = await transaction.get(readingDateCounterRef);
-      let readingDateCount;
-      if (readingDateCounterSnapshot.exists) {
-        readingDateCount = counterDocumentCount(readingDateCounterSnapshot.data());
-      } else {
-        // Migration-safe seed: existing staging logs created before the counter
-        // documents were introduced still count toward the five-book date limit.
-        const existingReadingDateLogs = await transaction.get(
-          db.collection("bookLogs")
-            .where("studentKey", "==", identity.studentKey)
-            .where("readingDate", "==", submission.record.readingDate)
-            .limit(READING_DATE_BOOK_LIMIT),
-        );
-        readingDateCount = existingReadingDateLogs.size;
-      }
+
+      // Always reconcile the counter with the real persisted logs. This is
+      // migration-safe for records created before readingDateCounters existed,
+      // and prevents a stale/low counter from allowing a sixth book for a date.
+      const existingReadingDateLogs = await transaction.get(
+        db.collection("bookLogs")
+          .where("studentKey", "==", identity.studentKey)
+          .where("readingDate", "==", submission.record.readingDate)
+          .limit(READING_DATE_BOOK_LIMIT),
+      );
+      const storedReadingDateCount = readingDateCounterSnapshot.exists
+        ? counterDocumentCount(readingDateCounterSnapshot.data())
+        : 0;
+      const readingDateCount = Math.max(storedReadingDateCount, existingReadingDateLogs.size);
       const readingDateSequence = nextReadingDateSequence(readingDateCount);
 
       // dailyDateKey/dailyBooksCount remain the server-authoritative actual
