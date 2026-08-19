@@ -8,6 +8,9 @@ import { fileURLToPath } from "node:url";
 // 1A total = existing TEST001 + 25 generated accounts.
 // 1B total = 26 generated accounts.
 const TEST001 = Object.freeze({ classId: "C01", studentId: "TEST001", displayAlias: "陳悅晴" });
+const AUTH_SCHOOL_CODE = "twghscysps";
+const SCHOOL_YEAR = "2026-2027";
+const STUDENT_AUTH_DOMAIN = "students.readingrun.invalid";
 
 const CLASS_1A = Object.freeze([
   ["TEST002", "李俊熙"], ["TEST003", "黃芷晴"], ["TEST004", "張宇軒"], ["TEST005", "林凱晴"],
@@ -49,7 +52,7 @@ if (generated.length !== 51 || CLASS_1A.length !== 25 || CLASS_1B.length !== 26)
 
 const importHeader = ["role", "classId", "studentId", "email", "pin", "displayAlias", "active"];
 const importRows = generated.map((student) => [
-  "student", student.classId, student.studentId, "", student.password, student.displayAlias, "true",
+  "student", student.classId, student.studentId, student.email, student.password, student.displayAlias, "true",
 ]);
 
 const loginHeader = ["class", "classId", "studentId", "studentName", "password", "note"];
@@ -73,12 +76,15 @@ console.log(`- Import CSV: ${importPath}`);
 console.log(`- Admin login sheet: ${loginSheetPath}`);
 console.log("Roster target: 1A = TEST001 + 25 new = 26; 1B = 26 new.");
 console.log("Passwords are unique and only stored in the private local CSV files above.");
+console.log(`Student Auth namespace: ${AUTH_SCHOOL_CODE}`);
 
 function makeStudent(classId, studentId, displayAlias) {
+  const yearToken = SCHOOL_YEAR.replace(/[^0-9]/g, "");
   return Object.freeze({
     classId,
     studentId,
     displayAlias,
+    email: `${AUTH_SCHOOL_CODE}.${yearToken}.${classId}.${studentId}@${STUDENT_AUTH_DOMAIN}`.toLowerCase(),
     password: `Rr26!${randomBytes(10).toString("base64url")}`,
   });
 }
