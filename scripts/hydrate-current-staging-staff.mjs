@@ -36,24 +36,24 @@ if (!html.includes('id="loginRoleLibrarian"') || !html.includes("全校教師"))
 }
 
 const hasRoleAwareUi = [
-  "librarian",
-  "loginTeacher",
-  "loginRole",
+  'staff.role === "librarian"',
+  "LIBRARIAN ANALYTICS",
+  "全校教師閱讀監察",
 ].every((marker) => ui.includes(marker));
 if (!hasRoleAwareUi) {
   throw new Error("Safety stop: current staging role-aware UI was not found.");
 }
 
-const hasStaffAuthorisationClient = [
-  "loginTeacher",
-  "authoriseTeacher",
-  "getIdTokenResult",
-  "librarian",
-  "teacher",
-  "schoolYear",
+const hasStaffDashboardDataClient = [
+  "normaliseStudentRecord",
+  "studentsSnapshot",
+  "booksCount",
+  "distance",
+  "lastReadingDate",
+  "dailyBooksCount",
 ].every((marker) => data.includes(marker));
-if (!hasStaffAuthorisationClient) {
-  throw new Error("Safety stop: current staging staff authorisation client was not found.");
+if (!hasStaffDashboardDataClient) {
+  throw new Error("Safety stop: current staging staff dashboard data client was not found.");
 }
 
 console.log(`✅ Current deployed staff UI hydrated from ${baseUrl}.`);
