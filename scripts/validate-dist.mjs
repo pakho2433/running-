@@ -55,7 +55,7 @@ const indexHtml = await readFile(path.join(dist, "index.html"), "utf8");
 if (/signInAnonymously|daily-book-recommendation/iu.test(deployedText)) {
   throw new Error("Deployment references anonymous authentication or the retired recommendation client.");
 }
-const inlineScripts = [...indexHtml.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
+const inlineScripts = [...indexHtml.matchAll(/<script(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/gi)];
 if (inlineScripts.length !== 1 || !/<script\s+type="importmap">/.test(inlineScripts[0][0])) {
   throw new Error("Only the reviewed import map may be an inline script.");
 }
