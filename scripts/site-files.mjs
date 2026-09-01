@@ -10,6 +10,8 @@ export const COPIED_SITE_FILES = [
   "country-scenes-secure.js",
   "device-layout.css",
   "device-layout.js",
+  "librarian-analytics.css",
+  "librarian-analytics.js",
   "map-controls.css",
   "map-controls.js",
   "mobile-map-fix.css",
