@@ -65,19 +65,18 @@ const result = spawnSync("npm", ["run", "build"], {
   stdio: "inherit",
   shell: process.platform === "win32",
 });
-
 if (result.status !== 0) process.exit(result.status ?? 1);
 
 const patches = [
   "scripts/apply-staging-hong-kong.mjs",
   "scripts/apply-staging-egypt-audio-fix.mjs",
-  "scripts/apply-staging-staff-roles.mjs",
-  "scripts/apply-staging-staff-roles-fix.mjs",
+  "scripts/hydrate-current-staging-staff.mjs",
   "scripts/apply-staging-librarian-analytics.mjs",
 ];
 
 for (const patchScript of patches) {
-  const patchResult = spawnSync("node", [patchScript], {
+  const args = patchScript.endsWith("hydrate-current-staging-staff.mjs") ? [patchScript, projectId] : [patchScript];
+  const patchResult = spawnSync("node", args, {
     cwd: root,
     env: environment,
     stdio: "inherit",
@@ -94,7 +93,7 @@ const validation = spawnSync("node", ["scripts/validate-dist.mjs"], {
 });
 if (validation.status !== 0) process.exit(validation.status ?? 1);
 
-const verification = spawnSync("node", ["scripts/verify-staging-staff-roles.mjs"], {
+const verification = spawnSync("node", ["scripts/verify-staging-librarian-analytics.mjs"], {
   cwd: root,
   env: environment,
   stdio: "inherit",
@@ -102,4 +101,4 @@ const verification = spawnSync("node", ["scripts/verify-staging-staff-roles.mjs"
 });
 if (verification.status !== 0) process.exit(verification.status ?? 1);
 
-console.log(`✅ Rebuilt and validated staging dist from ${baseUrl}`);
+console.log(`✅ Rebuilt and validated staging analytics from ${baseUrl} without replacing the existing staff permission backend.`);
