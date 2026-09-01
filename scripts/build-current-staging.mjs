@@ -68,20 +68,20 @@ const result = spawnSync("npm", ["run", "build"], {
 
 if (result.status !== 0) process.exit(result.status ?? 1);
 
-const hongKongPatch = spawnSync("node", ["scripts/apply-staging-hong-kong.mjs"], {
-  cwd: root,
-  env: environment,
-  stdio: "inherit",
-  shell: process.platform === "win32",
-});
-if (hongKongPatch.status !== 0) process.exit(hongKongPatch.status ?? 1);
+const patches = [
+  "scripts/apply-staging-hong-kong.mjs",
+  "scripts/apply-staging-egypt-audio-fix.mjs",
+  "scripts/apply-staging-staff-roles.mjs",
+];
 
-const egyptAudioPatch = spawnSync("node", ["scripts/apply-staging-egypt-audio-fix.mjs"], {
-  cwd: root,
-  env: environment,
-  stdio: "inherit",
-  shell: process.platform === "win32",
-});
-if (egyptAudioPatch.status !== 0) process.exit(egyptAudioPatch.status ?? 1);
+for (const patchScript of patches) {
+  const patchResult = spawnSync("node", [patchScript], {
+    cwd: root,
+    env: environment,
+    stdio: "inherit",
+    shell: process.platform === "win32",
+  });
+  if (patchResult.status !== 0) process.exit(patchResult.status ?? 1);
+}
 
 console.log(`✅ Rebuilt staging dist from ${baseUrl}`);
