@@ -68,7 +68,7 @@ jobs:
       - name: Enforce school ownership and protected branch
         run: npm run verify:deployment
 
-      - name: Rebuild current staging with staff roles and librarian analytics
+      - name: Rebuild analytics on top of current staging staff UI
         run: |
           node scripts/build-current-staging.mjs "$FIREBASE_PROJECT_ID"
           npm run configure:firebase
@@ -83,5 +83,5 @@ jobs:
       - name: Backfill librarian trend analytics once
         run: node admin-tools/backfill-librarian-analytics.mjs --project "$FIREBASE_PROJECT_ID" --school-year "$SCHOOL_YEAR"
 
-      - name: Deploy Hosting, Firestore, and Functions
-        run: ./node_modules/.bin/firebase deploy --project "$FIREBASE_PROJECT_ID" --only "hosting:reading,firestore,functions" --non-interactive
+      - name: Deploy analytics UI and submitReadingLog only
+        run: ./node_modules/.bin/firebase deploy --project "$FIREBASE_PROJECT_ID" --only "hosting:reading,functions:submitReadingLog" --non-interactive
