@@ -5,6 +5,7 @@
   "scripts": {
     "import-users": "node import-users-from-csv.mjs",
     "create-teacher": "node create-teacher.mjs",
+    "create-librarian": "node create-librarian.mjs",
     "generate-staging-test-users": "node generate-staging-1a-1b-test-users.mjs",
     "set-staging-test001-name": "node set-staging-test001-name.mjs",
     "repair-staging-student-names": "node repair-staging-student-names.mjs",
