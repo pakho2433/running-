@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const VERSION = "20260902-librarian-analytics-1";
+const VERSION = "20260902-librarian-analytics-2";
 
 function replaceTextOnce(source, search, replacement, label) {
   const count = source.split(search).length - 1;
@@ -116,19 +116,21 @@ await patch("dist/secure-data-service.js", (source) => {
 
 await patch("dist/secure-password-ui-app.js", (source) => {
   source = source.replace(/\.\/secure-data-service\.js\?v=[^\"']+/g, `./secure-data-service.js?v=${VERSION}`);
-  if (!source.includes('$("#librarianAnalyticsSections")?.classList.toggle')) {
+
+  if (!source.includes('document.getElementById("librarianAnalyticsSections")?.classList.toggle')) {
     source = replaceTextOnce(
       source,
-      `  const librarian = teacher.role === "librarian";\n  dom.loginScreen?.classList.add("is-hidden");`,
-      `  const librarian = teacher.role === "librarian";\n  $("#librarianAnalyticsSections")?.classList.toggle("is-hidden", !librarian);\n  dom.loginScreen?.classList.add("is-hidden");`,
+      `  const librarianMode = staff.role === "librarian";`,
+      `  const librarianMode = staff.role === "librarian";\n  document.getElementById("librarianAnalyticsSections")?.classList.toggle("is-hidden", !librarianMode);`,
       "librarian analytics visibility",
     );
   }
+
   if (!source.includes("readingrun:librarian-data")) {
     source = replaceTextOnce(
       source,
       `  renderClassRows(classSummary(students));\n  renderStudentRows(students);\n}`,
-      `  renderClassRows(classSummary(students));\n  renderStudentRows(students);\n  if (state.teacher?.role === "librarian") {\n    window.dispatchEvent(new CustomEvent("readingrun:librarian-data", {\n      detail: {\n        students,\n        classrooms: APP_CONFIG.classrooms || [],\n        schoolYear: APP_CONFIG.schoolYear || "",\n        today: schoolDateKey(),\n      },\n    }));\n  }\n}`,
+      `  renderClassRows(classSummary(students));\n  renderStudentRows(students);\n  window.dispatchEvent(new CustomEvent("readingrun:librarian-data", {\n    detail: {\n      students,\n      classrooms: APP_CONFIG.classrooms || [],\n      schoolYear: APP_CONFIG.schoolYear || "",\n      today: schoolDateKey(),\n    },\n  }));\n}`,
       "librarian analytics data event",
     );
   }
