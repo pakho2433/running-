@@ -14,6 +14,12 @@ if (!/^\d{4}-\d{4}$/.test(schoolYear)) throw new Error("Invalid --school-year.")
 
 initializeApp({ credential: applicationDefault(), projectId });
 const db = getFirestore();
+const migrationRef = db.doc(`systemMigrations/librarianAnalytics-${schoolYear}`);
+const migrationSnapshot = await migrationRef.get();
+if (migrationSnapshot.exists && migrationSnapshot.get("completed") === true && !dryRun) {
+  console.log(`✓ Librarian analytics migration already completed for ${schoolYear}; skipping bookLogs scan.`);
+  process.exit(0);
+}
 
 const snapshot = await db.collection("bookLogs")
   .where("schoolYear", "==", schoolYear)
@@ -50,4 +56,12 @@ for (let offset = 0; offset < entries.length; offset += 400) {
   await batch.commit();
   console.log(`Updated ${Math.min(offset + 400, entries.length)} / ${entries.length} student analytics documents.`);
 }
-console.log("✅ Librarian daily analytics backfill complete.");
+
+await migrationRef.set({
+  completed: true,
+  schoolYear,
+  sourceLogCount: snapshot.size,
+  studentCount: byStudent.size,
+  completedAt: FieldValue.serverTimestamp(),
+}, { merge: true });
+console.log("✅ Librarian daily analytics backfill complete; future deployments will skip the full scan.");
