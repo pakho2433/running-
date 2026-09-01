@@ -86,6 +86,14 @@ for (const patchScript of patches) {
   if (patchResult.status !== 0) process.exit(patchResult.status ?? 1);
 }
 
+const validation = spawnSync("node", ["scripts/validate-dist.mjs"], {
+  cwd: root,
+  env: environment,
+  stdio: "inherit",
+  shell: process.platform === "win32",
+});
+if (validation.status !== 0) process.exit(validation.status ?? 1);
+
 const verification = spawnSync("node", ["scripts/verify-staging-staff-roles.mjs"], {
   cwd: root,
   env: environment,
@@ -94,4 +102,4 @@ const verification = spawnSync("node", ["scripts/verify-staging-staff-roles.mjs"
 });
 if (verification.status !== 0) process.exit(verification.status ?? 1);
 
-console.log(`✅ Rebuilt staging dist from ${baseUrl}`);
+console.log(`✅ Rebuilt and validated staging dist from ${baseUrl}`);
