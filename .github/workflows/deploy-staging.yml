@@ -21,7 +21,7 @@ jobs:
     name: Firebase staging
     needs: verify
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     environment:
       name: reading-staging
       url: ${{ vars.SCHOOL_SITE_ORIGIN }}
@@ -63,14 +63,14 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npm --prefix functions ci --ignore-scripts
+          npm --prefix admin-tools ci --ignore-scripts
 
       - name: Enforce school ownership and protected branch
         run: npm run verify:deployment
 
-      - name: Build and validate staging artifact
+      - name: Rebuild current staging with staff roles and librarian analytics
         run: |
-          npm run build
-          npm run validate:dist
+          node scripts/build-current-staging.mjs "$FIREBASE_PROJECT_ID"
           npm run configure:firebase
 
       - name: Authenticate to Google Cloud without a service-account key
@@ -79,6 +79,9 @@ jobs:
           project_id: ${{ vars.FIREBASE_PROJECT_ID }}
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Backfill librarian trend analytics once
+        run: node admin-tools/backfill-librarian-analytics.mjs --project "$FIREBASE_PROJECT_ID" --school-year "$SCHOOL_YEAR"
 
       - name: Deploy Hosting, Firestore, and Functions
         run: ./node_modules/.bin/firebase deploy --project "$FIREBASE_PROJECT_ID" --only "hosting:reading,firestore,functions" --non-interactive
