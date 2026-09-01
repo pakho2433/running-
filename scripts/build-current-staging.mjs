@@ -73,6 +73,7 @@ const patches = [
   "scripts/apply-staging-egypt-audio-fix.mjs",
   "scripts/apply-staging-staff-roles.mjs",
   "scripts/apply-staging-staff-roles-fix.mjs",
+  "scripts/apply-staging-librarian-analytics.mjs",
 ];
 
 for (const patchScript of patches) {
