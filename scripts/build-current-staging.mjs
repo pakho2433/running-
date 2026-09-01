@@ -22,12 +22,20 @@ async function fetchText(url) {
   return response.text();
 }
 
-const [firebaseSource, securitySource] = await Promise.all([
-  fetchText(`${baseUrl}/firebase-config-v3.js`),
+async function fetchJson(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
+  return response.json();
+}
+
+// Firebase Hosting exposes the active public web-app configuration at this
+// reserved endpoint. Use it instead of trying to JSON.parse firebase-config-v3.js,
+// because the deployed client module may load the config dynamically.
+const [firebase, securitySource] = await Promise.all([
+  fetchJson(`${baseUrl}/__/firebase/init.json`),
   fetchText(`${baseUrl}/security-config.js`),
 ]);
 
-const firebase = parseGeneratedModule(firebaseSource, "firebaseConfig");
 const security = parseGeneratedModule(securitySource, "securityConfig");
 
 if (firebase.projectId !== projectId) {
