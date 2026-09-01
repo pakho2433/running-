@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const VERSION = "20260902-librarian-analytics-2";
+const VERSION = "20260902-librarian-analytics-3";
 
 function replaceTextOnce(source, search, replacement, label) {
   const count = source.split(search).length - 1;
@@ -127,12 +127,14 @@ await patch("dist/secure-password-ui-app.js", (source) => {
   }
 
   if (!source.includes("readingrun:librarian-data")) {
-    source = replaceTextOnce(
-      source,
-      `  renderClassRows(classSummary(students));\n  renderStudentRows(students);\n}`,
-      `  renderClassRows(classSummary(students));\n  renderStudentRows(students);\n  window.dispatchEvent(new CustomEvent("readingrun:librarian-data", {\n    detail: {\n      students,\n      classrooms: APP_CONFIG.classrooms || [],\n      schoolYear: APP_CONFIG.schoolYear || "",\n      today: schoolDateKey(),\n    },\n  }));\n}`,
-      "librarian analytics data event",
-    );
+    const dashboardStart = source.indexOf("function renderTeacherDashboard(data) {");
+    const dashboardEndMarker = "\n}\n\nfunction renderMetricCards";
+    const dashboardEnd = dashboardStart >= 0 ? source.indexOf(dashboardEndMarker, dashboardStart) : -1;
+    if (dashboardStart < 0 || dashboardEnd < 0) {
+      throw new Error("librarian analytics data event: renderTeacherDashboard boundary not found.");
+    }
+    const eventSource = `\n  window.dispatchEvent(new CustomEvent("readingrun:librarian-data", {\n    detail: {\n      students,\n      classrooms: APP_CONFIG.classrooms || [],\n      schoolYear: APP_CONFIG.schoolYear || "",\n      today: schoolDateKey(),\n    },\n  }));`;
+    source = source.slice(0, dashboardEnd) + eventSource + source.slice(dashboardEnd);
   }
   return source;
 });
