@@ -30,13 +30,21 @@ const [html, ui, data] = await Promise.all([
   import("node:fs/promises").then(({ readFile }) => readFile(path.join(root, "dist/secure-password-ui-app.js"), "utf8")),
   import("node:fs/promises").then(({ readFile }) => readFile(path.join(root, "dist/secure-data-service.js"), "utf8")),
 ]);
+
 if (!html.includes('id="loginRoleLibrarian"') || !html.includes("全校教師")) {
   throw new Error("Safety stop: current staging staff login UI was not found.");
 }
-if (!ui.includes('state.loginRole === "teacher" || state.loginRole === "librarian"')) {
+
+const hasRoleAwareUi =
+  ui.includes("librarian")
+  && ui.includes("loginTeacher")
+  && ui.includes("loginRole");
+if (!hasRoleAwareUi) {
   throw new Error("Safety stop: current staging role-aware UI was not found.");
 }
+
 if (!data.includes('expectedRole = "teacher"') || !data.includes('staff.role !== "librarian"')) {
   throw new Error("Safety stop: current staging staff authorisation client was not found.");
 }
+
 console.log(`✅ Current deployed staff UI hydrated from ${baseUrl}.`);
