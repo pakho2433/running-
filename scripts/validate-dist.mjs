@@ -55,11 +55,23 @@ const indexHtml = await readFile(path.join(dist, "index.html"), "utf8");
 if (/signInAnonymously|daily-book-recommendation/iu.test(deployedText)) {
   throw new Error("Deployment references anonymous authentication or the retired recommendation client.");
 }
-const inlineScripts = [...indexHtml.matchAll(/<script(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/gi)];
-if (inlineScripts.length !== 1 || !/<script\s+type="importmap">/.test(inlineScripts[0][0])) {
-  throw new Error("Only the reviewed import map may be an inline script.");
+
+const scriptTags = [...indexHtml.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].map((match) => ({
+  full: match[0],
+  attributes: match[1] || "",
+  body: match[2] || "",
+}));
+const inlineScripts = scriptTags.filter((script) => !/\bsrc\s*=/i.test(script.attributes));
+const reviewedImportMaps = inlineScripts.filter((script) => /\btype\s*=\s*["']importmap["']/i.test(script.attributes));
+if (inlineScripts.length !== 1 || reviewedImportMaps.length !== 1) {
+  const diagnostics = inlineScripts.map((script, index) => {
+    const attrs = script.attributes.replace(/\s+/g, " ").trim() || "(none)";
+    const body = script.body.replace(/\s+/g, " ").trim().slice(0, 180) || "(empty)";
+    return `#${index + 1} attrs=[${attrs}] body=[${body}]`;
+  }).join(" | ");
+  throw new Error(`Only the reviewed import map may be an inline script. Found ${inlineScripts.length} inline script(s): ${diagnostics || "none"}`);
 }
-const importMapHash = `sha256-${createHash("sha256").update(inlineScripts[0][1]).digest("base64")}`;
+const importMapHash = `sha256-${createHash("sha256").update(reviewedImportMaps[0].body).digest("base64")}`;
 
 const firebaseJson = JSON.parse(await readFile(path.join(root, "firebase.json"), "utf8"));
 if (firebaseJson.hosting?.public !== "dist" || firebaseJson.hosting?.target !== "reading") {
